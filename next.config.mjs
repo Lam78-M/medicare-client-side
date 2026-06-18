@@ -1,14 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* রিয়্যাক্ট কম্পাইলার একটিভ করা হলো */
+  /* রিয়্যাক্ট কম্পাইলার একটিভ করা হলো */
   reactCompiler: true,
 
-  /* আনস্প্ল্যাশ থেকে ইমেজ লোড করার পারমিশন দেওয়া হলো */
+  /* ইন্টারনেটের যেকোনো লিংক থেকে ইমেজ লোড করার গ্লোবাল পারমিশন */
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
+        hostname: '**', // 🚀 এই ডাবল স্টার মানে পৃথিবীর যেকোনো HTTPS ডোমেইনের ইমেজ এখানে সাপোর্ট করবে!
+      },
+      {
+        protocol: 'http',
+        hostname: '**', // সেফটির জন্য HTTP লিংকগুলোর জন্যও ওপেন করে দেওয়া হলো
       },
     ],
   },

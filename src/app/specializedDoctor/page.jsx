@@ -1,4 +1,4 @@
-import {Specializations} from "@/components/Specializations";
+import Specializations from "@/components/Specializations";
 
 
 export const metadata = {

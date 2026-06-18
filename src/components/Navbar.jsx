@@ -1,113 +1,197 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
-import Image from "next/image";
-
-import { Heart, LayoutCells, SignOut } from "@gravity-ui/icons";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+// 🚀 Lucide React আইকন
+import { Heart, LayoutGrid, LogOut, ChevronDown, Menu, X } from "lucide-react";
+// 🚀 তোমার প্রজেক্টের Avatar কম্পোনেন্টটি এখানে ইম্পোর্ট নিশ্চিত করে নিও (যেমন HeroUI বা Shadcn)
+import { Avatar } from "@heroui/react"; 
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // পরে Better Auth সেটআপ করলে এখানে ইউজার স্টেট কানেক্ট করবে (আপাতত null)
-  const user = null; 
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false); // মোবাইল মেনু স্টেট
+  const [dropdownOpen, setDropdownOpen] = useState(false); // ডেক্সটপ ড্রপডাউন স্টেট
+  const dropdownRef = useRef(null);
 
-  const navLinks = [
+  // Better Auth লাইভ সেশন ডাটা
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
+  // বেসিক ন্যাভলিংকস
+  const baseNavLinks = [
     { name: "Home", href: "/" },
-    { name: "Find Doctors", href: "/doctors" },
+    { name: "Find Doctors", href: "/public/doctors" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
   ];
 
+  // 🚀 লজিক: ইউজার লগইন থাকলে ন্যাভলিংকস এর সাথে "Dashboard" যুক্ত হবে
+  const navLinks = user 
+    ? [...baseNavLinks, { name: "Dashboard", href: "/dashboard" }] 
+    : baseNavLinks;
+
+  // ড্রপডাউনের বাইরে ক্লিক করলে মেনু বন্ধ করার ইফেক্ট
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // 🚪 Better Auth লগআউট হ্যান্ডলার
+  const handleLogout = async () => {
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            setIsOpen(false);
+            setDropdownOpen(false);
+            router.push("/");
+            router.refresh();
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
-    <nav className="bg-[#021A54] text-white sticky top-0 z-50 shadow-lg">
+    <nav className="bg-[#021A54] text-white sticky top-0 z-50 shadow-xl border-b border-white/5">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
-          {/* 1. Logo Section */}
+          {/* ১. Logo Section */}
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-              <Heart className="text-[#FF85BB] animate-pulse" style={{ width: '28px', height: '28px' }} />
+              <Heart className="text-[#FF85BB] fill-[#FF85BB]/20 animate-pulse" size={28} />
               <span>MediCare<span className="text-[#FF85BB]">Connect</span></span>
             </Link>
           </div>
 
-          {/* 2. Desktop Navigation Links */}
+          {/* ২. Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-8 font-semibold">
             {navLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="hover:text-[#FF85BB] transition-colors duration-200">
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className={`transition-colors duration-200 text-sm tracking-wide ${
+                  link.name === "Dashboard" 
+                    ? "text-[#FF85BB] hover:text-[#FF85BB]/80 font-bold" 
+                    : "hover:text-[#FF85BB]"
+                }`}
+              >
                 {link.name}
               </Link>
             ))}
           </div>
 
-          {/* 3. Auth / Profile Area (Desktop) */}
+          {/* ৩. Auth / Profile Area (Desktop) */}
           <div className="hidden lg:flex items-center">
-            {user ? (
-              <div className="dropdown dropdown-end">
-                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar border-2 border-[#FF85BB]">
-                  <div className="w-10 rounded-full">
-                    <Image alt="Profile" src={user?.photoURL || "https://placehold.co/100"} />
+            {isPending ? (
+              <div className="w-6 h-6 border-2 border-[#FF85BB] border-t-transparent rounded-full animate-spin"></div>
+            ) : user ? (
+              /* কাস্টম ড্রপডাউন কন্টেইনার */
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-1 transition-all cursor-pointer outline-none"
+                >
+                  {/* 👤 তোমার দেওয়া প্রিমিয়াম Avatar ক্যাপসুল ডিজাইন */}
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors">
+                    <Avatar className="w-7 h-7 border-2 border-[#48d07e]">
+                      <Avatar.Image alt={user?.name} src={user?.image} />
+                      <Avatar.Fallback>
+                        {user?.name?.charAt(0)}
+                      </Avatar.Fallback>
+                    </Avatar>
+
+                    <span className="text-sm font-medium text-white max-w-[120px] truncate">
+                      {user?.name}
+                    </span>
+                    <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </div>
-                </div>
-                {/* User Profile Dropdown */}
-                <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-2xl rounded-xl w-56 bg-[#FFCEE3] text-[#021A54] font-bold border border-[#FF85BB]">
-                  <li className="px-3 py-2 text-sm text-[#021A54]/70 border-b border-[#FF85BB]/30 mb-1">
-                    Hello, {user?.displayName || "User"}
-                  </li>
-                  <li>
-                    <Link href="/dashboard" className="hover:bg-[#FF85BB] hover:text-white flex items-center gap-2 py-2.5 rounded-lg transition">
-                      <LayoutCells style={{ width: '16px', height: '16px' }} /> Dashboard
-                    </Link>
-                  </li>
-                  <li>
-                    <button className="text-red-600 hover:bg-red-100 flex items-center gap-2 py-2.5 rounded-lg transition mt-1">
-                      <SignOut style={{ width: '16px', height: '16px' }} /> Logout
+                </button>
+                
+                {/* 💎 ক্লিন ড্রপডাউন মেনু (শুধু ইমেইল এবং লগআউট) */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-60 bg-[#021A54] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-2xl p-2 z-50 backdrop-blur-xl">
+                    <div className="px-4 py-2.5 border-b border-white/10 mb-1">
+                      <p className="text-xs font-semibold text-slate-400">Signed in as</p>
+                      <p className="text-sm font-bold text-[#FFCEE3] truncate mt-0.5">{user.email}</p>
+                    </div>
+                    
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all cursor-pointer mt-1"
+                    >
+                      <LogOut size={16} /> Logout
                     </button>
-                  </li>
-                </ul>
+                  </div>
+                )}
               </div>
             ) : (
-              <Link href="/login" className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm tracking-wide">
+              <Link href="/auth/signup" className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm tracking-wide">
                 Login / Register
               </Link>
             )}
           </div>
 
-          {/* 4. Mobile Menu Button (Hamburger) */}
+          {/* ৪. Mobile Menu Button */}
           <div className="lg:hidden flex items-center">
-            <button onClick={() => setIsOpen(!isOpen)} className="text-white hover:text-[#FF85BB] p-2" aria-label="Toggle Menu">
-              {isOpen ? (
-                // Close (X) SVG
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              ) : (
-                // Menu (Hamburger) SVG
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-              )}
+            <button onClick={() => setIsOpen(!isOpen)} className="text-white hover:text-[#FF85BB] p-2 transition-colors">
+              {isOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 5. Mobile Responsive Menu Dropdown */}
+      {/* ৫. Mobile Responsive Menu Dropdown */}
       {isOpen && (
         <div className="lg:hidden bg-[#021A54] border-t border-white/10 px-4 pt-2 pb-6 space-y-2 font-semibold">
-          {navLinks.map((link) => (
-            <Link key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="block py-3 px-3 rounded-lg hover:bg-white/5 hover:text-[#FF85BB] transition">
+          {baseNavLinks.map((link) => (
+            <Link key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="block py-3 px-3 rounded-xl hover:bg-white/5 hover:text-[#FF85BB] transition-all text-sm">
               {link.name}
             </Link>
           ))}
+          
           <div className="pt-4 border-t border-white/10">
-            {user ? (
-              <div className="space-y-2">
-                <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-2 py-3 px-3 rounded-xl bg-[#FFCEE3] text-[#021A54] font-bold">
-                  <LayoutCells style={{ width: '18px', height: '18px' }} /> Dashboard
+            {isPending ? (
+              <div className="flex justify-center py-2">
+                <div className="w-6 h-6 border-2 border-[#FF85BB] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : user ? (
+              /* 📱 ছোট স্ক্রিনের ইউজার প্রোফাইল কার্ড */
+              <div className="space-y-3 px-2">
+                <div className="flex items-center gap-3 py-3 border-b border-white/10">
+                  {/* মোবাইল স্ক্রিনেও কাস্টম Avatar */}
+                  <Avatar className="w-10 h-10 border-2 border-[#48d07e]">
+                    <Avatar.Image alt={user?.name} src={user?.image} />
+                    <Avatar.Fallback>
+                      {user?.name?.charAt(0)}
+                    </Avatar.Fallback>
+                  </Avatar>
+                  <div className="truncate">
+                    <p className="text-sm font-bold text-white truncate">{user.name}</p>
+                    <p className="text-xs text-slate-400 truncate mt-0.5">{user.email}</p>
+                  </div>
+                </div>
+
+                {/* মোবাইল স্ক্রিনের জন্য ড্যাশবোর্ড ও লগআউট বাটন */}
+                <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-2 py-3 px-4 rounded-xl bg-[#FFCEE3] text-[#021A54] font-extrabold transition active:scale-95 justify-center text-sm shadow-md">
+                  <LayoutGrid size={16} /> Dashboard
                 </Link>
-                <button className="w-full flex items-center gap-2 py-3 px-3 rounded-xl bg-red-600 text-white font-bold transition active:scale-95">
-                  <SignOut style={{ width: '18px', height: '18px' }} /> Logout
+                
+                <button onClick={handleLogout} className="w-full flex items-center gap-2 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition active:scale-95 justify-center text-sm shadow-md cursor-pointer">
+                  <LogOut size={16} /> Logout
                 </button>
               </div>
             ) : (
-              <Link href="/login" onClick={() => setIsOpen(false)} className="block text-center bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 text-sm tracking-wide">
+              <Link href="/auth/signup" onClick={() => setIsOpen(false)} className="block text-center bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 text-sm tracking-wide">
                 Login / Register
               </Link>
             )}
@@ -115,5 +199,5 @@ export default function Navbar() {
         </div>
       )}
     </nav>
-  );
+  ); 
 }

@@ -8,7 +8,7 @@ import { PhoneCall } from "lucide-react";
 export default function Footer() {
   return (
     <footer className="bg-[#021A54] text-slate-300 border-t border-white/5">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 px-6 py-16">
+      <div className="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 px-6 py-16 ">
         
         {/* Col 1: Logo & Statement */}
         <div className="space-y-4">
