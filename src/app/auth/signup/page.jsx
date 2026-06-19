@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"; // 🚀 রাউটার ইম�
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { User, Mail, Lock, Image as ImageIcon, Cast, ArrowRight } from "lucide-react";
+import {Description, Label, Radio, RadioGroup} from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
 
 export default function SignUpPage() {
@@ -18,6 +19,7 @@ export default function SignUpPage() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState('patient')
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -60,6 +62,7 @@ export default function SignUpPage() {
         password: password,
         name: name,
         image: photoUrl || undefined,
+        role,
         callbackURL: "/", // Better Auth কে বলা হলো হোম পেজে নিয়ে যেতে
       });
 
@@ -181,6 +184,48 @@ export default function SignUpPage() {
               />
             </div>
           </div>
+
+          {/* role based name */}
+          {/* role based name */}
+<div className="flex flex-col gap-2">
+  <Label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1 pb-2">
+    Subscription Plan
+  </Label>
+  <RadioGroup onChange={value => setRole(value)} defaultValue="patient" name="role" orientation="horizontal" className="flex gap-4">
+    
+    {/* Starter */}
+    <Radio value="patient">
+      <Radio.Content>
+        <Radio.Control>
+          <Radio.Indicator  />
+        </Radio.Control>
+        <span className="text-sm font-bold text-[#021A54]">Patient</span>
+      </Radio.Content>
+    
+    </Radio>
+
+    {/* Pro */}
+    <Radio value="doctors">
+      <Radio.Content>
+        <Radio.Control>
+          <Radio.Indicator  />
+        </Radio.Control>
+        <span className="text-sm font-bold text-[#021A54]">Doctors</span>
+      </Radio.Content>
+    </Radio>
+
+    {/* Teams */}
+    <Radio value="admin">
+      <Radio.Content>
+        <Radio.Control>
+          <Radio.Indicator />
+        </Radio.Control>
+        <span className="text-sm font-bold text-[#021A54]">Admin</span>
+      </Radio.Content>
+    </Radio>
+
+  </RadioGroup>
+</div>
 
           <motion.button
             whileHover={{ y: -2, boxShadow: "0px 10px 25px rgba(2, 26, 84, 0.15)" }}

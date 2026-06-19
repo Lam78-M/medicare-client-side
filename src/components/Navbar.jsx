@@ -3,9 +3,8 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-// 🚀 Lucide React আইকন
-import { Heart, LayoutGrid, LogOut, ChevronDown, Menu, X } from "lucide-react";
-// 🚀 তোমার প্রজেক্টের Avatar কম্পোনেন্টটি এখানে ইম্পোর্ট নিশ্চিত করে নিও (যেমন HeroUI বা Shadcn)
+import { Heart, LogOut, ChevronDown, Menu, X } from "lucide-react";
+
 import { Avatar } from "@heroui/react"; 
 
 export default function Navbar() {
@@ -26,7 +25,7 @@ export default function Navbar() {
     { name: "Contact Us", href: "/contact" },
   ];
 
-  // 🚀 লজিক: ইউজার লগইন থাকলে ন্যাভলিংকস এর সাথে "Dashboard" যুক্ত হবে
+  // 🚀 লজিক: ইউজার লগইন থাকলে ডেক্সটপ ও মোবাইল উভয় ন্যাভলিংকস এর সাথেই "Dashboard" যুক্ত হবে
   const navLinks = user 
     ? [...baseNavLinks, { name: "Dashboard", href: "/dashboard" }] 
     : baseNavLinks;
@@ -79,11 +78,7 @@ export default function Navbar() {
               <Link 
                 key={link.name} 
                 href={link.href} 
-                className={`transition-colors duration-200 text-sm tracking-wide ${
-                  link.name === "Dashboard" 
-                    ? "text-[#FF85BB] hover:text-[#FF85BB]/80 font-bold" 
-                    : "hover:text-[#FF85BB]"
-                }`}
+                className="transition-colors duration-200 text-sm tracking-wide hover:text-[#FF85BB]"
               >
                 {link.name}
               </Link>
@@ -101,7 +96,7 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-1 transition-all cursor-pointer outline-none"
                 >
-                  {/* 👤 তোমার দেওয়া প্রিমিয়াম Avatar ক্যাপসুল ডিজাইন */}
+                  {/* 👤 প্রিমিয়াম Avatar ক্যাপসুল ডিজাইন */}
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors">
                     <Avatar className="w-7 h-7 border-2 border-[#48d07e]">
                       <Avatar.Image alt={user?.name} src={user?.image} />
@@ -150,11 +145,17 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ৫. Mobile Responsive Menu Dropdown */}
+      {/* ৫. Mobile Responsive Menu Dropdown (sm and md screens) */}
       {isOpen && (
         <div className="lg:hidden bg-[#021A54] border-t border-white/10 px-4 pt-2 pb-6 space-y-2 font-semibold">
-          {baseNavLinks.map((link) => (
-            <Link key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="block py-3 px-3 rounded-xl hover:bg-white/5 hover:text-[#FF85BB] transition-all text-sm">
+          {/* ড্যাশবোর্ডসহ সব লিঙ্ক এখন এখানে একসাথে white দেখাবে এবং hover করলে pink হবে */}
+          {navLinks.map((link) => (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              onClick={() => setIsOpen(false)} 
+              className="block py-3 px-3 rounded-xl hover:bg-white/5 hover:text-[#FF85BB] transition-all text-sm"
+            >
               {link.name}
             </Link>
           ))}
@@ -165,10 +166,9 @@ export default function Navbar() {
                 <div className="w-6 h-6 border-2 border-[#FF85BB] border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : user ? (
-              /* 📱 ছোট স্ক্রিনের ইউজার প্রোফাইল কার্ড */
+              /* 📱 ছোট স্ক্রিনের ইউজার প্রোফাইল কার্ড এবং লগআউট */
               <div className="space-y-3 px-2">
-                <div className="flex items-center gap-3 py-3 border-b border-white/10">
-                  {/* মোবাইল স্ক্রিনেও কাস্টম Avatar */}
+                <div className="flex items-center gap-3 py-3">
                   <Avatar className="w-10 h-10 border-2 border-[#48d07e]">
                     <Avatar.Image alt={user?.name} src={user?.image} />
                     <Avatar.Fallback>
@@ -180,11 +180,6 @@ export default function Navbar() {
                     <p className="text-xs text-slate-400 truncate mt-0.5">{user.email}</p>
                   </div>
                 </div>
-
-                {/* মোবাইল স্ক্রিনের জন্য ড্যাশবোর্ড ও লগআউট বাটন */}
-                <Link href="/dashboard" onClick={() => setIsOpen(false)} className="flex items-center gap-2 py-3 px-4 rounded-xl bg-[#FFCEE3] text-[#021A54] font-extrabold transition active:scale-95 justify-center text-sm shadow-md">
-                  <LayoutGrid size={16} /> Dashboard
-                </Link>
                 
                 <button onClick={handleLogout} className="w-full flex items-center gap-2 py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition active:scale-95 justify-center text-sm shadow-md cursor-pointer">
                   <LogOut size={16} /> Logout
@@ -199,5 +194,5 @@ export default function Navbar() {
         </div>
       )}
     </nav>
-  ); 
+  );   
 }
