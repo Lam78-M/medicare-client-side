@@ -50,15 +50,15 @@ useEffect(() => {
     ],
     // 🩺 Doctors Menu (Database standard capitalization)
     doctors: [
-      { icon: House, label: "Overview", href: "/dashboard/doctor" },
-      { icon: LayoutSideContentLeft, label: "Manage Schedule", href: "/dashboard/doctor/schedule" },
-      { icon: Magnifier, label: "Appointment Requests", href: "/dashboard/doctor/requests" },
-      { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctor/prescriptions" },
-      { icon: Person, label: "Profile Settings", href: "/dashboard/doctor/profile" },
+      { icon: House, label: "Overview", href: "/dashboard/doctors" },
+      { icon: LayoutSideContentLeft, label: "Manage Schedule", href: "/dashboard/doctors/schedule" },
+      { icon: Magnifier, label: "Appointment Requests", href: "/dashboard/doctors/requests" },
+      { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctors/prescriptions" },
+      { icon: Person, label: "Profile Settings", href: "/dashboard/doctors/profile" },
     ],
     // 👑 Admin Menu
     admin: [
-      { icon: House, label: "Overview", href: "/dashboard/admin" },
+      { icon: House, label: "Overview Admin", href: "/dashboard/admin" },
       { icon: Person, label: "Manage Users", href: "/dashboard/admin/users" },
       { icon: LayoutSideContentLeft, label: "Manage Doctors", href: "/dashboard/admin/doctors" },
       { icon: Magnifier, label: "Manage Appointments", href: "/dashboard/admin/appointments" },

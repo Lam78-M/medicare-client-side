@@ -62,9 +62,9 @@ export default function Specializations() {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mb-30">
       {/* সেকশন হেডার */}
-      <div className="text-center max-w-3xl mx-auto mb-12">
+      <div className="text-center max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-5xl font-black text-[#021A54] tracking-tight mb-4">
           Top Medical <span className="text-[#FF85BB]">Specializations</span>
         </h2>

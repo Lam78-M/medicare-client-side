@@ -10,7 +10,7 @@ export default function PlatformStats() {
   ];
 
   return (
-    <section className="bg-[#021A54] py-20 text-white relative overflow-hidden mt-30 mb-30">
+    <section className="container mx-auto rounded-2xl bg-[#021A54] py-20 text-white relative overflow-hidden mt-30 mb-30">
       {/* গ্লো ইফেক্ট */}
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-[#FF85BB]/10 rounded-full blur-3xl pointer-events-none"></div>
 

@@ -9,15 +9,15 @@ import { Avatar } from "@heroui/react";
 
 export default function Navbar() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false); // মোবাইল মেনু স্টেট
-  const [dropdownOpen, setDropdownOpen] = useState(false); // ডেক্সটপ ড্রপডাউন স্টেট
+  const [isOpen, setIsOpen] = useState(false); 
+  const [dropdownOpen, setDropdownOpen] = useState(false); 
   const dropdownRef = useRef(null);
 
-  // Better Auth লাইভ সেশন ডাটা
+  // Better Auth Live Session Data
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
 
-  // বেসিক ন্যাভলিংকস
+  // Basic Navlinks
   const baseNavLinks = [
     { name: "Home", href: "/" },
     { name: "Find Doctors", href: "/doctors" },
@@ -25,12 +25,24 @@ export default function Navbar() {
     { name: "Contact Us", href: "/contactus" },
   ];
 
-  // 🚀 লজিক: ইউজার লগইন থাকলে ডেক্সটপ ও মোবাইল উভয় ন্যাভলিংকস এর সাথেই "Dashboard" যুক্ত হবে
+  // 🚀 DYNAMIC LOGIC: User role er upor bhab kore exact dashboard link set hobe
+  let dashboardHref = "/dashboard/patient"; // Default fallback
+  
+  if (user?.role) {
+    if (user.role === "doctor" || user.role === "doctors") {
+      dashboardHref = "/dashboard/doctors"; // Tomar config e 'doctors' dewa tai doctors rakhlam
+    } else if (user.role === "admin") {
+      dashboardHref = "/dashboard/admin";
+    } else {
+      dashboardHref = "/dashboard/patient";
+    }
+  }
+
   const navLinks = user 
-    ? [...baseNavLinks, { name: "Dashboard", href: "/dashboard/patient" }] 
+    ? [...baseNavLinks, { name: "Dashboard", href: dashboardHref }] 
     : baseNavLinks;
 
-  // ড্রপডাউনের বাইরে ক্লিক করলে মেনু বন্ধ করার ইফেক্ট
+  // Dropdown close handling
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -41,7 +53,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🚪 Better Auth লগআউট হ্যান্ডলার
+  // 🚪 Logout Handler
   const handleLogout = async () => {
     try {
       await authClient.signOut({
@@ -49,6 +61,7 @@ export default function Navbar() {
           onSuccess: () => {
             setIsOpen(false);
             setDropdownOpen(false);
+            localStorage.removeItem("user_role"); // Sidebar e localstorage thakle clear korar jonne
             router.push("/");
             router.refresh();
           },
@@ -90,13 +103,11 @@ export default function Navbar() {
             {isPending ? (
               <div className="w-6 h-6 border-2 border-[#FF85BB] border-t-transparent rounded-full animate-spin"></div>
             ) : user ? (
-              /* কাস্টম ড্রপডাউন কন্টেইনার */
               <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-1 transition-all cursor-pointer outline-none"
                 >
-                  {/* 👤 প্রিমিয়াম Avatar ক্যাপসুল ডিজাইন */}
                   <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors">
                     <Avatar className="w-7 h-7 border-2 border-[#48d07e]">
                       <Avatar.Image alt={user?.name} src={user?.image} />
@@ -112,7 +123,6 @@ export default function Navbar() {
                   </div>
                 </button>
                 
-                {/* 💎 ক্লিন ড্রপডাউন মেনু (শুধু ইমেইল এবং লগআউট) */}
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-3 w-60 bg-[#021A54] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4)] rounded-2xl p-2 z-50 backdrop-blur-xl">
                     <div className="px-4 py-2.5 border-b border-white/10 mb-1">
@@ -120,6 +130,15 @@ export default function Navbar() {
                       <p className="text-sm font-bold text-[#FFCEE3] truncate mt-0.5">{user.email}</p>
                     </div>
                     
+                    {/* Extra Safe Dashboard Button in dropdown */}
+                    <Link
+                      href={dashboardHref}
+                      onClick={() => setDropdownOpen(false)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:bg-white/5 transition-all"
+                    >
+                      My Dashboard
+                    </Link>
+
                     <button 
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all cursor-pointer mt-1"
@@ -145,10 +164,9 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ৫. Mobile Responsive Menu Dropdown (sm and md screens) */}
+      {/* ৫. Mobile Responsive Menu */}
       {isOpen && (
         <div className="lg:hidden bg-[#021A54] border-t border-white/10 px-4 pt-2 pb-6 space-y-2 font-semibold">
-          {/* ড্যাশবোর্ডসহ সব লিঙ্ক এখন এখানে একসাথে white দেখাবে এবং hover করলে pink হবে */}
           {navLinks.map((link) => (
             <Link 
               key={link.name} 
@@ -166,7 +184,6 @@ export default function Navbar() {
                 <div className="w-6 h-6 border-2 border-[#FF85BB] border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : user ? (
-              /* 📱 ছোট স্ক্রিনের ইউজার প্রোফাইল কার্ড এবং লগআউট */
               <div className="space-y-3 px-2">
                 <div className="flex items-center gap-3 py-3">
                   <Avatar className="w-10 h-10 border-2 border-[#48d07e]">

@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { User, Mail, Lock, Image as ImageIcon, Cast, ArrowRight } from "lucide-react";
 import {Description, Label, Radio, RadioGroup} from "@heroui/react";
 import { authClient } from "@/lib/auth-client";
+import { FaGoogle } from "react-icons/fa";
 
 export default function SignUpPage() {
   const router = useRouter(); // 🚀 রাউটার ইনিশিয়েলাইজেশন
@@ -98,17 +99,13 @@ export default function SignUpPage() {
   };
 
   // 🌐 Better Auth গুগল সোশ্যাল লগইন
-  const handleGoogleLogin = async () => {
-    try {
-      showToast("Redirecting to Google...", "info");
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/", // গুগলের ক্ষেত্রে ডিফল্ট হোম পেজে রেখে পরে হ্যান্ডেল করা যায়
-      });
-    } catch (err) {
-      showToast("Google authentication failed!", "error");
-    }
-  };
+
+  const handleGoogleSignIn = async () =>{
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/"
+    })
+  }
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
@@ -258,14 +255,13 @@ export default function SignUpPage() {
         </div>
 
         {/* 🌐 গুগল সাইন ইন বাটন */}
-        <motion.button
+        <motion.button onClick={handleGoogleSignIn}
           whileHover={{ y: -2, borderColor: "#FF85BB", backgroundColor: "rgba(255,206,227,0.1)" }}
           whileTap={{ scale: 0.98 }}
-          onClick={handleGoogleLogin}
           type="button"
           className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 font-bold text-[#021A54] transition-all flex items-center justify-center gap-3 text-sm cursor-pointer"
         >
-          <Cast size={18} className="text-[#FF85BB]" />
+          <FaGoogle size={18} className="text-[#FF85BB]" />
           Google Account
         </motion.button>
 

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Mail, Lock, Cast, ArrowRight } from "lucide-react";
+import { Mail, Lock,  ArrowRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client"; 
+import { FaGoogle } from "react-icons/fa";
 
 export default function SignInPage() {
   const router = useRouter(); // 🚀 রাউটার ইনিশিয়েলাইজেশন
@@ -76,7 +77,7 @@ export default function SignInPage() {
         if (loggedInRole === "admin") {
           router.push("/dashboard/admin");
         } else if (loggedInRole === "doctors") {
-          router.push("/dashboard/doctor");
+          router.push("/dashboard/doctors");
         } else {
           router.push("/dashboard/patient");
         }
@@ -91,17 +92,14 @@ export default function SignInPage() {
   };
 
   //  Better Auth google redirect
-  const handleGoogleLogin = async () => {
-    try {
-      showToast("Connecting to Google...", "info");
-      await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/", // গুগলে লগইন শেষে সরাসরি হোম পেজে পাঠাবে
-      });
-    } catch (err) {
-      showToast("Google sign in failed!", "error");
-    }
-  };
+  const handleGoogleSignIn = async () =>{
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/"
+    })
+  }
+
+
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
       {/* ব্যাকগ্রাউন্ড গ্লসি আর্ট */}
@@ -184,11 +182,11 @@ export default function SignInPage() {
         <motion.button
           whileHover={{ y: -2, borderColor: "#FF85BB", backgroundColor: "rgba(255,206,227,0.1)" }}
           whileTap={{ scale: 0.98 }}
-          onClick={handleGoogleLogin}
+          onClick={handleGoogleSignIn}
           type="button"
           className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 font-bold text-[#021A54] transition-all flex items-center justify-center gap-3 text-sm cursor-pointer"
         >
-          <Cast size={18} className="text-[#FF85BB]" />
+          <FaGoogle size={18} className="text-[#FF85BB]" />
           Google Account
         </motion.button>
 
