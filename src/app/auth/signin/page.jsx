@@ -71,7 +71,7 @@ export default function SignInPage() {
       const loggedInRole = data?.user?.role || "patient"; 
       localStorage.setItem("user_role", loggedInRole);
 
-      // ⚡ ডাইনামিক রিডাইরেক্ট লজিক (রোল অনুসারে ড্যাশবোর্ডে পুশ)
+      // dynamic redirect for different
       setTimeout(() => {
         if (loggedInRole === "admin") {
           router.push("/dashboard/admin");
@@ -90,7 +90,7 @@ export default function SignInPage() {
     }
   };
 
-  // 🌐 Better Auth গুগল লগইন ও রিডাইরেক্ট
+  //  Better Auth google redirect
   const handleGoogleLogin = async () => {
     try {
       showToast("Connecting to Google...", "info");

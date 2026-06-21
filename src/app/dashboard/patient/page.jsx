@@ -1,8 +1,10 @@
 "use client"
-import AppointmentTable from '@/components/dashboard/AppointmentTable';
+
 import DoctorStats from '@/components/dashboard/DoctorStats';
 import { useSession } from '@/lib/auth-client';
 import React from 'react';
+import AppointmentPage from './appointmentTable/page';
+
 
 const PatientPage = () => {
     const{data: session, isPending} = useSession()
@@ -27,7 +29,9 @@ const PatientPage = () => {
 </div>
      </div>
  <DoctorStats></DoctorStats>
- <AppointmentTable></AppointmentTable>
+ <AppointmentPage></AppointmentPage>
+
+
 </div>
     );
 };

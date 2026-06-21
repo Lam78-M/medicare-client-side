@@ -83,7 +83,6 @@ export default function AboutUs() {
             </div>
           </motion.div>
         </div>
-
         {/* Section 3: Platform Statistics (Required Dynamic Section style match) */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
