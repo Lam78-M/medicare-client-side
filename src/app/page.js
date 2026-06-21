@@ -4,6 +4,7 @@ import WhyChooseUs from "@/components/WhyChooseUs";
 import PlatformStats from "@/components/PlatFormStats";
 
 
+
 export default function Home() {
   return (
   <div>
@@ -12,6 +13,7 @@ export default function Home() {
  <Specializations></Specializations>
  <PlatformStats></PlatformStats>
  <WhyChooseUs></WhyChooseUs>
+
     </main>
   </div>
   );

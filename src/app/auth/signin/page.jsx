@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // 🚀 রিডাইরেক্ট ফিক্স করার জন্য ইম্পোর্ট করা হলো
+import { useRouter } from "next/navigation"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Mail, Lock, Cast, ArrowRight } from "lucide-react";
-import { authClient } from "@/lib/auth-client"; // তোমার auth-client পাথ
+import { authClient } from "@/lib/auth-client"; 
 
 export default function SignInPage() {
   const router = useRouter(); // 🚀 রাউটার ইনিশিয়েলাইজেশন
@@ -44,7 +44,6 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
 
-    // formData থেকে ডাটা ডিস্ট্রাকচার করা হলো (যাতে reference error না আসে)
     const { email, password } = formData;
 
     if (!email || !password) {
@@ -54,11 +53,10 @@ export default function SignInPage() {
     }
 
     try {
-      // 🚀 Better Auth সাইন-ইন কল
+      // 🚀 Better Auth সাইন-ইন কল (callbackURL কমানো হলো যাতে ড্যাশবোর্ড লজিক কাজ করে)
       const { data, error: authError } = await authClient.signIn.email({
         email: email,
         password: password,
-        callbackURL: "/", // সফল হলে হোম পেজে রিডাইরেক্ট করবে
       });
 
       if (authError) {
@@ -66,11 +64,22 @@ export default function SignInPage() {
         return;
       }
 
-      showToast("Welcome back! Redirecting... 🚀");
+      showToast("Welcome back! Redirecting to dashboard... 🚀");
       
-      // ⚡ ব্যাকআপ রিডাইরেক্ট (যদি callbackURL কোন কারণে ব্রাউজারে আটকে যায়)
+      // 🔥 ওস্তাদ ট্রিক: Better Auth সেশন থেকে রোল বের করা
+      // ডাটাবেজে যদি রোল 'patient', 'doctors' বা 'admin' থাকে, সেটা লোকাল স্টোরেজে সেভ হবে
+      const loggedInRole = data?.user?.role || "patient"; 
+      localStorage.setItem("user_role", loggedInRole);
+
+      // ⚡ ডাইনামিক রিডাইরেক্ট লজিক (রোল অনুসারে ড্যাশবোর্ডে পুশ)
       setTimeout(() => {
-        router.push("/");
+        if (loggedInRole === "admin") {
+          router.push("/dashboard/admin");
+        } else if (loggedInRole === "doctors") {
+          router.push("/dashboard/doctor");
+        } else {
+          router.push("/dashboard/patient");
+        }
         router.refresh();
       }, 1500);
 
@@ -87,13 +96,12 @@ export default function SignInPage() {
       showToast("Connecting to Google...", "info");
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/", // 🚀 গুগলে লগইন শেষে সরাসরি হোম পেজে পাঠাবে
+        callbackURL: "/", // গুগলে লগইন শেষে সরাসরি হোম পেজে পাঠাবে
       });
     } catch (err) {
       showToast("Google sign in failed!", "error");
     }
   };
-
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
       {/* ব্যাকগ্রাউন্ড গ্লসি আর্ট */}

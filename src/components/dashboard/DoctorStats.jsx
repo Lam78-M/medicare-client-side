@@ -52,7 +52,7 @@ export default function DoctorStats() {
   ];
 
   return (
-    <div className="max-w-7xl bg-[#021A54]  p-6 mt-4 rounded-2xl">
+    <div className=" bg-[#021A54]  p-6 mt-4 rounded-2xl">
       {/* 4 Column Grid Layout - Responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-7xl mx-auto">
         {stats.map((item) => (

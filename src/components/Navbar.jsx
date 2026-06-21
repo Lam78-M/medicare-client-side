@@ -20,14 +20,14 @@ export default function Navbar() {
   // বেসিক ন্যাভলিংকস
   const baseNavLinks = [
     { name: "Home", href: "/" },
-    { name: "Find Doctors", href: "/public/doctors" },
-    { name: "About Us", href: "/about" },
-    { name: "Contact Us", href: "/contact" },
+    { name: "Find Doctors", href: "/doctors" },
+    { name: "About Us", href: "/aboutus" },
+    { name: "Contact Us", href: "/contactus" },
   ];
 
   // 🚀 লজিক: ইউজার লগইন থাকলে ডেক্সটপ ও মোবাইল উভয় ন্যাভলিংকস এর সাথেই "Dashboard" যুক্ত হবে
   const navLinks = user 
-    ? [...baseNavLinks, { name: "Dashboard", href: "/dashboard" }] 
+    ? [...baseNavLinks, { name: "Dashboard", href: "/dashboard/patient" }] 
     : baseNavLinks;
 
   // ড্রপডাউনের বাইরে ক্লিক করলে মেনু বন্ধ করার ইফেক্ট

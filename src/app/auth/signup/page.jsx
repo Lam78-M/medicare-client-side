@@ -19,7 +19,8 @@ export default function SignUpPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState('patient')
+  // 🔥 ডাটাবেজের সাথে বানান ঠিক রাখতে ডিফল্ট ভ্যালু 'patient' রাখলাম, আর ডক্টর সিলেক্ট করলে 'doctors' যাবে
+  const [role, setRole] = useState('patient'); 
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -57,13 +58,14 @@ export default function SignUpPage() {
     }
 
     try {
+      // 🔥 লক্ষ করো বন্ধু: callbackURL কেটে দিয়েছি যাতে Better Auth জোর করে হোমে না পাঠায়।
+      // আমরা নিজেরা নিচে রোল চেক করে সঠিক ড্যাশবোর্ডে পাঠাবো।
       const { data, error: authError } = await authClient.signUp.email({
         email: email,
         password: password,
         name: name,
         image: photoUrl || undefined,
-        role,
-        callbackURL: "/", // Better Auth কে বলা হলো হোম পেজে নিয়ে যেতে
+        role: role, // 'patient', 'doctors' অথবা 'admin' পাস হবে
       });
 
       if (authError) {
@@ -71,11 +73,20 @@ export default function SignUpPage() {
         return;
       }
 
-      showToast("Account created successfully! Redirecting... ✨");
+      showToast("Account created successfully! Redirecting to dashboard... ✨");
       
-      // ⚡ ব্যাকআপ রাউটার পুশ: যাতে ১ সেকেন্ডের জন্যও পেজ আটকে না থাকে
+      // ⚡ ওস্তাদ ট্রিক: সাইন-আপ ডেটা থেকে রোল চেক করে সঠিক ড্যাশবোর্ডে পাঠানো
+      // যদি data.user.role না পাও, তবে সরাসরি আমাদের লোকাল 'role' স্টেট ব্যবহার করলেই কাজ হয়ে যাবে!
+      const userRole = data?.user?.role || role;
+       localStorage.setItem("user_role", role)
       setTimeout(() => {
-        router.push("/");
+        if (userRole === "admin") {
+          router.push("/dashboard/admin");
+        } else if (userRole === "doctors") {
+          router.push("/dashboard/doctors"); // ফোল্ডার স্ট্রাকচার /dashboard/doctor হলে
+        } else {
+          router.push("/dashboard/patient");
+        }
         router.refresh();
       }, 1500);
       
@@ -92,7 +103,7 @@ export default function SignUpPage() {
       showToast("Redirecting to Google...", "info");
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/", // গুগলে লগইন শেষে সরাসরি হোম পেজে পাঠাবে
+        callbackURL: "/", // গুগলের ক্ষেত্রে ডিফল্ট হোম পেজে রেখে পরে হ্যান্ডেল করা যায়
       });
     } catch (err) {
       showToast("Google authentication failed!", "error");
