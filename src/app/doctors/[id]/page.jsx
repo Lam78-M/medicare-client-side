@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Chip, Spinner, Avatar, Input } from "@heroui/react";
+import { authClient } from "@/lib/auth-client"; // 🔥 Better Auth ক্লায়েন্ট ইম্পোর্ট করা হলো
 
 const DoctorDetailPage = () => {
     const { id } = useParams();
@@ -30,13 +31,10 @@ const DoctorDetailPage = () => {
                 const res = await fetch(`http://localhost:5000/api/doctors/${id}`);
                 const data = await res.json();
                 setDoctor(data);
-                if (data?.availableDays?.length > 0) {
-                    setSelectedDay(data.availableDays[0]);
-                }
             } catch (error) {
                 console.error("Error fetching doctor details:", error);
             } finally {
-                setLoading(false);
+                loading && setLoading(false);
             }
         };
         if (id) fetchDoctorDetails();
@@ -100,9 +98,18 @@ const DoctorDetailPage = () => {
                             </div>
                         </div>
 
-                        <div className="w-full text-left space-y-2 bg-gray-50 p-4 rounded-2xl">
-                            <p className="text-xs font-bold text-gray-400 uppercase">Primary Hospital</p>
-                            <p className="text-sm font-bold truncate" style={{ color: '#021A54' }}>🏢 {doctor.hospitalName}</p>
+                        {/* 🏢 Hospital & Email Info Section */}
+                        <div className="w-full text-left space-y-3 bg-gray-50 p-4 rounded-2xl">
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Primary Hospital</p>
+                                <p className="text-sm font-bold truncate" style={{ color: '#021A54' }}>🏢 {doctor.hospitalName}</p>
+                            </div>
+                            {(doctor.doctorEmail || doctor.email) && (
+                                <div className="border-t border-gray-200/60 pt-2">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Doctor Email</p>
+                                    <p className="text-sm font-semibold truncate text-gray-600">✉️ {doctor.doctorEmail || doctor.email}</p>
+                                </div>
+                            )}
                         </div>
                     </Card>
                 </div>
@@ -149,12 +156,32 @@ const DoctorDetailPage = () => {
                         
                         {/* 📅 ১. নির্দিষ্ট তারিখ সিলেক্ট করার ক্যালেন্ডার */}
                         <div>
-                            <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
+                            <h3 className="text-md font-bold uppercase tracking-wider mb-1" style={{ color: '#021A54' }}>
                                 📅 1. Select Appointment Date
                             </h3>
+                            
+                            <div className="mb-4">
+                                <p className="text-xs text-gray-400 font-medium mb-1.5">Doctors Chamber Days:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {doctor.availableDays?.map((day, i) => (
+                                        <span 
+                                            key={i} 
+                                            className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full border ${
+                                                selectedDay === day 
+                                                    ? 'bg-[#021A54] text-white border-[#021A54]' 
+                                                    : 'bg-pink-50/50 text-[#021A54] border-[#FFCEE3]'
+                                            }`}
+                                        >
+                                            🗓️ {day}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
                             <Input 
                                 type="date"
                                 min={new Date().toISOString().split('T')[0]} 
+                                value={selectedDate}
                                 onChange={(e) => {
                                     const dateStr = e.target.value;
                                     if (!dateStr) return;
@@ -186,7 +213,7 @@ const DoctorDetailPage = () => {
                                 ⏰ 2. Available Slots {selectedDay && `for ${selectedDay}`}
                             </h3>
                             {!selectedDate ? (
-                                <p className="text-xs text-gray-400 italic">অনুগ্রহ করে প্রথমে ডাক্তারের চেম্বারের দিন অনুযায়ী একটি তারিখ সিলেক্ট করুন।</p>
+                                <p className="text-xs text-gray-400 italic">অনুগ্রহ করে প্রথমে ডাক্তারের চেম্বারের দিন অনুযায়ী একটি তারিখ সিলেক্ট করুন।</p>
                             ) : (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {doctor.availableSlots?.map((slot, index) => {
@@ -200,7 +227,7 @@ const DoctorDetailPage = () => {
                                                 onClick={() => setSelectedSlot(slot.time)}
                                                 className={`p-3 text-xs font-extrabold rounded-xl border transition-all duration-300 text-center
                                                     ${slot.isBooked ? 'bg-gray-100 text-gray-400 border-gray-200 line-through cursor-not-allowed' : ''}
-                                                    ${!slot.isBooked && !isSelected ? 'bg-pink-50 text-[#FF85BB] border-[#FFCEE3] hover:bg-[#FF85BB] hover:text-white' : ''}
+                                                    ${!slot.isBooked && !isSelected ? 'bg-pink-50 text-[#FF8BB] border-[#FFCEE3] hover:bg-[#FF85BB] hover:text-white' : ''}
                                                     ${isSelected ? 'text-white border-[#FF85BB] shadow-md' : ''}
                                                 `}
                                                 style={isSelected ? { backgroundColor: '#FF85BB' } : {}}
@@ -216,17 +243,33 @@ const DoctorDetailPage = () => {
                             )}
                         </div>
 
-                        {/* 🚀 ৩ ও ৪ নাম্বার সেকশন ফর্ম এর ভেতরে নিয়ে আসা হয়েছে */}
+                        {/* ================= FORM INSIDE ================= */}
                         <form 
                             onSubmit={async (e) => {
                                 e.preventDefault(); 
+
+                                // 🔐 Better Auth থেকে রিয়েল-টাইম লগইন সেশন ডাইনামিকালি রিসিভ করা হচ্ছে
+                                const session = await authClient.getSession();
                                 
-                                // 🟢 কনসোলে ডাটা প্রিন্ট করে চেক করার জন্য
-                                console.log("Form Submitted Successfully! 🚀");
+                                if (!session?.data?.user) {
+                                    alert("অ্যাপয়েন্টমেন্ট বুক করার জন্য অনুগ্রহ করে আগে লগইন করুন।");
+                                    return;
+                                }
+
+                                if (!selectedDate || !selectedSlot) {
+                                    alert("অনুগ্রহ করে অ্যাপয়েন্টমেন্টের তারিখ এবং টাইম স্লট সিলেক্ট করুন।");
+                                    return;
+                                }
+
+                                // 📧 লগইন করা রিয়েল পেশেন্টের তথ্য ভেরিয়েবলে নেওয়া হচ্ছে
+                                const currentUserEmail = session.data.user.email;
+                                const currentUserName = session.data.user.name || "Anonymous Patient";
                                 
+                                // 🔥 ডাইনামিক ডেটা অবজেক্ট স্ট্রাকচার তৈরি হলো
                                 const bookingData = {
                                     doctorId: doctor._id,
                                     doctorName: doctor.doctorName,
+                                    doctorEmail: doctor.doctorEmail || doctor.email, 
                                     specialization: doctor.specialization,
                                     hospitalName: doctor.hospitalName,
                                     consultationFee: doctor.consultationFee,
@@ -234,17 +277,14 @@ const DoctorDetailPage = () => {
                                     appointmentDay: selectedDay,   
                                     appointmentTime: formatTime12Hour(selectedSlot), 
                                     patientProblem: patientProblem, 
-                                    userEmail: "patient@example.com", 
-                                    userName: "Amit Hasan"            
+                                    
+                                    userEmail: currentUserEmail,   // ✅ ডাইনামিক রিয়েল ইমেইল
+                                    userName: currentUserName,  
+                                    patientEmail: currentUserEmail,   // ✅ ওভারভিউ পেজ যদি এই নামে খোঁজে
+                                    patientName: currentUserName,     // ✅ ডাইনামিক রিয়েল নাম
+                                    status: "Pending",             
+                                    createdAt: new Date()
                                 };
-
-                                console.log("Your Booking Data Object:", bookingData);
-
-                                // কাস্টম ভ্যালিডেশন চেক (ডেট বা স্লট সিলেক্ট না করলে সাবমিট আটকে যাবে)
-                                if (!selectedDate || !selectedSlot) {
-                                    alert("অনুগ্রহ করে অ্যাপয়েন্টমেন্টের তারিখ এবং টাইম স্লট সিলেক্ট করুন।");
-                                    return;
-                                }
 
                                 setBookingLoading(true);
                                 try {
@@ -254,17 +294,17 @@ const DoctorDetailPage = () => {
                                         body: JSON.stringify(bookingData)
                                     });
 
-                                    const resData = await response.json();
-                                    console.log("Backend Server Response:", resData);
-
                                     if (response.ok) {
-                                        // কোনো অ্যালার্ট ছাড়া সরাসরি রিডাইরেক্ট
+                                        alert("অ্যাপয়েন্টমেন্ট সফলভাবে বুক করা হয়েছে! 🎉");
                                         router.push('/dashboard/patient'); 
                                     } else {
-                                        console.error("Booking failed on server.");
+                                        const errData = await response.json();
+                                        console.error("Booking failed on server:", errData.error);
+                                        alert("বুকিং ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
                                     }
                                 } catch (error) {
                                     console.error("Network Error:", error);
+                                    alert("সার্ভার কানেকশন এরর! অনুগ্রহ করে ব্যাকএন্ড চালু আছে কিনাチェック করুন।");
                                 } finally {
                                     setBookingLoading(false);
                                 }

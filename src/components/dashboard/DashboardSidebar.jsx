@@ -40,10 +40,10 @@ useEffect(() => {
 
   // 🛠️ ROLE ONUSHARE ALADA ALADA DASHBOARD LINKS (Assignment Criteria Complete)
   const menuConfig = {
-    // 🧑‍ Patients Menu
+    // 🧑‍ Patients Menu 
     patient: [
       { icon: House, label: "Overview", href: "/dashboard/patient" },
-      { icon: Magnifier, label: "My Appointments", href: "/dashboard/patient/appointmentTable" },
+      { icon: Magnifier, label: "My Appointments", href: "/dashboard/patient/myAppointInfo" },
       { icon: Bell, label: "Payments History", href: "/dashboard/patient/payments" },
       { icon: Envelope, label: "FeedBack Reviews", href: "/dashboard/patient/reviews" },
       { icon: Person, label: "My Profile", href: "/dashboard/patient/myProfile" },
@@ -51,10 +51,10 @@ useEffect(() => {
     // 🩺 Doctors Menu (Database standard capitalization)
     doctors: [
       { icon: House, label: "Overview", href: "/dashboard/doctors" },
-      { icon: LayoutSideContentLeft, label: "Manage Schedule", href: "/dashboard/doctors/schedule" },
-      { icon: Magnifier, label: "Appointment Requests", href: "/dashboard/doctors/requests" },
+      { icon: LayoutSideContentLeft, label: "Manage Schedule & Days", href: "/dashboard/doctors/doctorTimeManage" },
+      { icon: Magnifier, label: "Appointment Requests", href: "/dashboard/doctors/patientRequests" },
       { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctors/prescriptions" },
-      { icon: Person, label: "Profile Settings", href: "/dashboard/doctors/profile" },
+      { icon: Person, label: "Profile Settings", href: "/dashboard/doctors/doctorProfile" },
     ],
     // 👑 Admin Menu
     admin: [

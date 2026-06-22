@@ -15,7 +15,7 @@ export default function PatientFeedbackPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
-  // 🎯 STEP 1: Fetching lists straight to drop down state array
+  // 🎯 STEP 1: Fetching Unique Booked Doctors List
   useEffect(() => {
     const fetchMyBookedDoctors = async () => {
       try {
@@ -26,20 +26,35 @@ export default function PatientFeedbackPage() {
           return;
         }
 
-        // 📧 Live Auth check: 'patient@example.com' catch
+        // 📧 Better Auth থেকে পেশেন্টের Email নেওয়া হচ্ছে
         const patientEmail = session.data.user.email; 
 
-        // 📡 Backend route hitting
-        const response = await fetch(`http://localhost:5000/api/appointments/patient?email=${patientEmail}`);
+        // 📡 ব্যাকএন্ড রুটে 'patientEmail' পাস করা হচ্ছে
+        const response = await fetch(`http://localhost:5000/api/v1/patient-appointments/${patientEmail}`);
         const resData = await response.json();
+        
+        console.log("🔍 UNIQUE DOCTORS IN FRONTEND:", resData);
 
-        console.log("🔍 COMPACT TESTING DATA INSIDE FRONTEND:", resData);
-
-        if (Array.isArray(resData)) {
-          // 🚀 ZERO FILTERS WORK: Array pipeline load perfectly to component loop
-          setBookedDoctors(resData);
+        if (resData.success && Array.isArray(resData.doctors)) {
+          setBookedDoctors(resData.doctors);
         } else {
-          toast.error("Failed to load appointment references.");
+          // 🔄 ব্যাকআপ রুট ট্রাই করা হচ্ছে
+          const backupRes = await fetch(`http://localhost:5000/api/appointments/patient?email=${patientEmail}`);
+          const backupData = await backupRes.json();
+          
+          if (Array.isArray(backupData)) {
+            // ডাটাবেজের অবজেক্ট স্ট্রাকচার থেকে নিখুঁতভাবে ম্যাপ করে নেওয়া হলো
+            const formattedDocs = backupData.map(item => ({
+              doctorId: item.doctorId || item._id || item.id,
+              doctorName: item.doctorName || item.name,
+              specialization: item.specialization || ""
+            })).filter((value, index, self) => 
+              self.findIndex(v => v.doctorId === value.doctorId) === index
+            );
+            setBookedDoctors(formattedDocs);
+          } else {
+            toast.error("Failed to load appointment references.");
+          }
         }
       } catch (err) {
         console.error("UI Fetch Error:", err);
@@ -72,7 +87,7 @@ export default function PatientFeedbackPage() {
         patientId,
         patientName,
         doctorId: selectedDoctorId,
-        doctorName: selectedDoctorName, // 🚀 Real name update token column
+        doctorName: selectedDoctorName, 
         reviewText,
         rating: Number(rating),
         createdAt: new Date()
@@ -97,7 +112,7 @@ export default function PatientFeedbackPage() {
     } catch (err) {
       toast.error("Network communication failed!");
     } finally {
-      setLoading(false);
+      loading && setLoading(false);
     }
   };
 
@@ -120,7 +135,7 @@ export default function PatientFeedbackPage() {
         </div>
 
         <form onSubmit={handleReviewSubmit} className="space-y-5">
-          {/* 🩺 Dropdown Wrapper Selection element container */}
+          {/* 🩺 Dropdown Selection container */}
           <div>
             <label className="block text-sm font-bold text-[#021A54] mb-2 uppercase tracking-wide">Select Appointed Doctor</label>
             <div className="relative">
@@ -131,22 +146,26 @@ export default function PatientFeedbackPage() {
                   const currentSelectedDocId = e.target.value;
                   setSelectedDoctorId(currentSelectedDocId);
                   
-                  // 🎯 DYNAMIC OBJECT KEY MATCHING EXACTLY AS TOMAR RESPONSE DATA SCENARIO:
-                  // Tumi metadata file scenario block format-e likhecho: doctorId & doctorName
-                  const targetDocObject = bookedDoctors.find(d => String(d.doctorId) === String(currentSelectedDocId));
+                  // 🔥 এখানে আইডি চেক করার কন্ডিশন ফিক্স করা হয়েছে যেন ডাটাবেজের যেকোনো কী ম্যাচ করে
+                  const targetDocObject = bookedDoctors.find(d => 
+                    String(d.doctorId || d.id || d._id) === String(currentSelectedDocId)
+                  );
                   if (targetDocObject) {
-                    setSelectedDoctorName(targetDocObject.doctorName);
+                    setSelectedDoctorName(targetDocObject.doctorName || targetDocObject.name);
                   }
                 }}
                 required
                 className="w-full pl-10 pr-4 py-2.5 border rounded-xl bg-white text-sm font-semibold text-gray-700 outline-none"
               >
                 <option value="">-- Choose From Your Doctors List --</option>
-                {/* 🚀 HUB-A-HU DATABASE SCHEMA PROPERTY STRINGS LOOP */}
                 {bookedDoctors && bookedDoctors.map((item, index) => {
+                  // 🔥 ব্যাকএন্ড অবজেক্টের সব ধরণের সম্ভাব্য 'Key' হ্যান্ডেল করা হয়েছে এখানে
+                  const currentId = item.doctorId || item.id || item._id || index;
+                  const currentName = item.doctorName || item.name || "Unknown Doctor";
+                  
                   return (
-                    <option key={item._id || index} value={item.doctorId}>
-                      {item.doctorName} — {item.specialization}
+                    <option key={currentId} value={currentId}>
+                      {currentName} {item.specialization ? `— ${item.specialization}` : ""}
                     </option>
                   );
                 })}
