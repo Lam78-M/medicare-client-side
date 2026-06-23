@@ -1,26 +1,39 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@heroui/react";
 import { toast } from 'react-toastify';
 
 export default function DoctorScheduleTagsEditor({ doctorData, onUpdateSuccess }) {
-    const doctorId = doctorData?._id?.$oid || doctorData?._id;
+    // 🎯 মঙ্গোডিবির $oid ফরম্যাট থেকে আইডি নিখুঁতভাবে এক্সট্র্যাক্ট করা
+  // 🎯 সরাসরি স্ট্রিং আইডি এবং মঙ্গোডিবি অবজেক্ট আইডি — দুটিই হ্যান্ডেল করার পারফেক্ট লাইন:
+const doctorId = typeof doctorData?._id === 'object' ? doctorData?._id?.$oid : doctorData?._id;
 
     const weekDaysOptions = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const timeSlotsOptions = [
         "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM",
-        "02:00 PM", "02:30 PM", "03:30 PM", "04:00 PM", "07:30 PM"
+        "02:00 PM", "02:30 PM", "03:30 PM", "04:00 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM"
     ];
 
-    const [availableDays, setAvailableDays] = useState(doctorData?.availableDays || []);
-    const [availableSlots, setAvailableSlots] = useState(
-        doctorData?.availableSlots?.map(s => s.time) || []
-    );
-
+    // স্টেট ইনিশিয়ালাইজেশন
+    const [availableDays, setAvailableDays] = useState([]);
+    const [availableSlots, setAvailableSlots] = useState([]);
     const [tempDay, setTempDay] = useState("");
     const [tempTime, setTempTime] = useState("");
     const [updating, setUpdating] = useState(false);
+
+    // 🌟 ম্যাজিক পার্ট: ডক্টরের ডাটা লোড হওয়ার সাথে সাথে স্টেটগুলোকে ডাইনামিকালি সিঙ্ক করা
+    useEffect(() => {
+        if (doctorData) {
+            if (doctorData.availableDays) {
+                setAvailableDays(doctorData.availableDays);
+            }
+            if (doctorData.availableSlots) {
+                // অবজেক্ট অ্যারে থেকে শুধু টাইমের স্ট্রিংগুলো বের করে স্টেটে রাখা
+                setAvailableSlots(doctorData.availableSlots.map(s => s.time || s));
+            }
+        }
+    }, [doctorData]);
 
     const addDayChip = () => {
         if (!tempDay) return;
@@ -54,6 +67,7 @@ export default function DoctorScheduleTagsEditor({ doctorData, onUpdateSuccess }
         if (!doctorId) return toast.error("Doctor profile identifier mapping missing! ❌");
         setUpdating(true);
 
+        // ডাটাবেজের রিকোয়ার্ড স্ট্রাকচার অনুযায়ী পেলোড তৈরি
         const payload = {
             availableDays,
             availableSlots: availableSlots.map(t => ({ time: t, isBooked: false }))

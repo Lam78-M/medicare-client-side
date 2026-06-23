@@ -1,25 +1,26 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Chip, Input, Spinner } from "@heroui/react";
+import { Button, Card, Chip, Input, Spinner } from "@heroui/react"; 
 import { toast } from 'react-toastify'; 
+import { authClient } from "@/lib/auth-client"; 
 
 export default function AppointmentPage() {
+    const { data: session, isPending } = authClient.useSession();
+
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+    const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'approved', 'pending'
+
     // Reschedule management states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeAppointment, setActiveAppointment] = useState(null); 
     const [newDate, setNewDate] = useState('');
     const [newSlot, setNewSlot] = useState('');
 
-    const userEmail = "patient@example.com"; 
-
-    // Fetch user appointments
-    const fetchAppointments = () => {
+    const fetchAppointments = (email) => {
         setLoading(true);
-        fetch(`http://localhost:5000/api/appointments/patient?email=${userEmail}`)
+        fetch(`http://localhost:5000/api/appointments/patient?email=${email}`)
             .then((res) => res.json())
             .then((data) => {
                 setAppointments(Array.isArray(data) ? data : []);
@@ -33,10 +34,13 @@ export default function AppointmentPage() {
     };
 
     useEffect(() => {
-        fetchAppointments();
-    }, [userEmail]);
+        if (!isPending && session?.user?.email) {
+            fetchAppointments(session.user.email);
+        } else if (!isPending && !session) {
+            setLoading(false);
+        }
+    }, [session, isPending]);
 
-    // ❌ Cancel Appointment Handler
     const handleCancel = async (id) => {
         if (!id) return;
         if (!confirm("আপনি কি নিশ্চিত যে অ্যাপয়েন্টমেন্টটি বাতিল করতে চান?")) return;
@@ -60,7 +64,6 @@ export default function AppointmentPage() {
         }
     };
 
-    // 🗓️ Open Reschedule Panel
     const openRescheduleModal = (appointment) => {
         if (!appointment) return;
         setActiveAppointment(appointment);
@@ -69,10 +72,8 @@ export default function AppointmentPage() {
         setIsModalOpen(true);
     };
 
-    // 🚀 Submit Rescheduled Data
     const handleRescheduleSubmit = async (e) => {
         e.preventDefault();
-        
         if (!activeAppointment) return;
         const id = activeAppointment?._id?.$oid || activeAppointment?._id;
         if (!id) return;
@@ -97,7 +98,7 @@ export default function AppointmentPage() {
                 toast.success("Rescheduled Successfully! 🗓️✨"); 
                 setIsModalOpen(false);
                 setActiveAppointment(null); 
-                fetchAppointments(); 
+                if(session?.user?.email) fetchAppointments(session.user.email); 
             } else {
                 toast.error("Something went wrong while rescheduling. ⚠️"); 
             }
@@ -107,10 +108,27 @@ export default function AppointmentPage() {
         }
     };
 
-    if (loading) {
+    // স্ট্যাটাস ফিল্টার লজিক
+    const filteredAppointments = appointments.filter((app) => {
+        if (filterStatus === "approved") return app.status === "Approved";
+        if (filterStatus === "pending") return app.status !== "Approved";
+        return true;
+    });
+
+    if (isPending || (loading && session)) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
-                <Spinner size="lg" style={{ color: '#FF85BB' }} label="Loading Your Schedules..." />
+                <Spinner size="lg" style={{ color: '#FF85BB' }} label="Verifying Better Auth sessions..." />
+            </div>
+        );
+    }
+
+    if (!session || !session.user) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
+                <Card className="p-8 text-center font-bold text-red-500 bg-white rounded-3xl shadow-sm border-none">
+                    Access Denied. Please Login with Better Auth. 🔒
+                </Card>
             </div>
         );
     }
@@ -120,32 +138,61 @@ export default function AppointmentPage() {
             <div className="max-w-5xl mx-auto">
                 
                 {/* Header Section */}
-                <div className="mb-10 text-center">
+                <div className="mb-6 text-center">
                     <h1 className="text-3xl font-black text-[#021A54] tracking-tight">
                         My Appointments Dashboard
                     </h1>
                     <p className="text-gray-500 mt-2 text-sm">
-                        Manage, Reschedule, or Cancel your ongoing consulting schedules
+                        Patient Account: <span className="font-bold text-[#FF85BB]">{session.user.email}</span>
                     </p>
                 </div>
+
+                {/* 🌟 Custom Tailwind Filter Tabs (রেন্ডার এরর গ্যারান্টিড ফিক্স!) */}
+                <div className="flex justify-center mb-8">
+                    <div className="bg-white rounded-2xl p-1.5 border border-gray-200 shadow-sm flex gap-1">
+                        <button 
+                            onClick={() => setFilterStatus("all")}
+                            className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
+                                filterStatus === "all" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
+                            }`}
+                        >
+                            All ({appointments.length})
+                        </button>
+                        <button 
+                            onClick={() => setFilterStatus("approved")}
+                            className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
+                                filterStatus === "approved" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
+                            }`}
+                        >
+                            Approved ({appointments.filter(a => a.status === 'Approved').length})
+                        </button>
+                        <button 
+                            onClick={() => setFilterStatus("pending")}
+                            className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
+                                filterStatus === "pending" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
+                            }`}
+                        >
+                            Pending ({appointments.filter(a => a.status !== 'Approved').length})
+                        </button>
+                    </div>
+                </div>
                 
-                {/* Horizontal Rows Content Container */}
+                {/* Appointments List */}
                 <div className="space-y-4">
-                    {appointments.length === 0 ? (
-                        <Card className="p-12 text-center text-gray-400 font-bold bg-white rounded-3xl shadow-sm border border-none">
-                            No appointments registered yet.
+                    {filteredAppointments.length === 0 ? (
+                        <Card className="p-12 text-center text-gray-400 font-bold bg-white rounded-3xl shadow-sm border-none">
+                            No {filterStatus !== 'all' ? filterStatus : ''} appointments found.
                         </Card>
                     ) : (
-                        appointments.map((appointment, index) => {
+                        filteredAppointments.map((appointment, index) => {
                             if (!appointment) return null; 
-                            const appId = appointment?._id?.$oid || appointment?._id;
-                            const uniqueKey = appId || `app-key-${index}`;
+                            const currentId = appointment?._id?.$oid || appointment?._id;
+                            const uniqueKey = currentId || `app-key-${index}`;
 
                             return (
                                 <Card key={uniqueKey} className="bg-white p-5 rounded-3xl shadow-sm border-none hover:shadow-md transition-all duration-300">
                                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                                         
-                                        {/* Left Side: Doctor Info */}
                                         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                                             <div className="w-12 h-12 rounded-2xl bg-pink-50 flex items-center justify-center border border-[#FFCEE3] text-xl">
                                                 👨‍⚕️
@@ -156,14 +203,13 @@ export default function AppointmentPage() {
                                                     <Chip size="sm" className="font-bold text-[10px] bg-[#FFCEE3] text-[#021A54]">
                                                         {appointment.specialization}
                                                     </Chip>
-                                                    <span className="text-xs text-gray-400 truncate max-w-[200px] sm:max-w-none">
+                                                    <span className="text-xs text-gray-400 truncate">
                                                         🏢 {appointment.hospitalName}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Center Panel: Date/Time */}
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-2 w-full lg:w-auto border-t border-b border-gray-50 py-3 lg:border-none lg:py-0">
                                             <div>
                                                 <p className="text-[10px] uppercase font-bold text-gray-400">Schedule Date</p>
@@ -187,7 +233,6 @@ export default function AppointmentPage() {
                                             </div>
                                         </div>
 
-                                        {/* Right Side: Action Buttons */}
                                         <div className="flex items-center gap-2 w-full sm:w-auto justify-end ml-auto lg:ml-0">
                                             <Button 
                                                 size="sm" 
@@ -198,7 +243,7 @@ export default function AppointmentPage() {
                                             </Button>
                                             <Button 
                                                 size="sm" 
-                                                onClick={() => handleCancel(appId)}
+                                                onClick={() => handleCancel(currentId)}
                                                 className="bg-transparent border border-red-200 text-red-500 font-bold text-xs rounded-xl px-4 py-4 hover:bg-red-50"
                                             >
                                                 Cancel ❌
@@ -207,7 +252,6 @@ export default function AppointmentPage() {
 
                                     </div>
 
-                                    {/* Patient Problem Note */}
                                     <div className="mt-3 bg-gray-50/50 rounded-2xl p-3 border border-gray-100">
                                         <span className="text-[10px] uppercase font-black text-gray-400 block mb-0.5">Reported Symptoms / Problem:</span>
                                         <p className="text-xs font-medium text-gray-600 italic">

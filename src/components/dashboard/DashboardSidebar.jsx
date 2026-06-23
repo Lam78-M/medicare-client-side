@@ -134,7 +134,7 @@ useEffect(() => {
   return (
     <>
       {/* Desktop Sidebar (Tomar original grid layer wrapper strictly optimized) */}
-      <aside className="hidden lg:flex flex-col w-72 min-h-screen border-r bg-[#021A54] text-white border-white/10 p-4">
+      <aside className="hidden lg:flex flex-col w-72 min-h-screen border-r rounded-2xl bg-[#021A54] text-white border-white/10 p-4">
         {navContent}
       </aside>
 

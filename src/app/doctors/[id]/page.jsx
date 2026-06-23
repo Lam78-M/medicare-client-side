@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Chip, Spinner, Avatar, Input } from "@heroui/react";
-import { authClient } from "@/lib/auth-client"; // 🔥 Better Auth ক্লায়েন্ট ইম্পোর্ট করা হলো
+import { authClient } from "@/lib/auth-client"; 
+import { toast } from 'react-toastify'; // 🌟 Added react-toastify import
+import Link from 'next/link';
 
 const DoctorDetailPage = () => {
     const { id } = useParams();
@@ -33,6 +35,7 @@ const DoctorDetailPage = () => {
                 setDoctor(data);
             } catch (error) {
                 console.error("Error fetching doctor details:", error);
+                toast.error("Failed to fetch doctor details! ❌");
             } finally {
                 loading && setLoading(false);
             }
@@ -98,7 +101,6 @@ const DoctorDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* 🏢 Hospital & Email Info Section */}
                         <div className="w-full text-left space-y-3 bg-gray-50 p-4 rounded-2xl">
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Primary Hospital</p>
@@ -154,7 +156,7 @@ const DoctorDetailPage = () => {
                     {/* Booking Form Card */}
                     <Card className="border-none shadow-sm bg-white p-6 rounded-3xl space-y-6">
                         
-                        {/* 📅 ১. নির্দিষ্ট তারিখ সিলেক্ট করার ক্যালেন্ডার */}
+                        {/* 📅 1. Select Appointment Date */}
                         <div>
                             <h3 className="text-md font-bold uppercase tracking-wider mb-1" style={{ color: '#021A54' }}>
                                 📅 1. Select Appointment Date
@@ -191,7 +193,8 @@ const DoctorDetailPage = () => {
                                     const dayName = daysOfWeek[chosenDate.getDay()];
 
                                     if (doctor.availableDays && !doctor.availableDays.includes(dayName)) {
-                                        alert(`দুঃখিত, Dr. ${doctor.doctorName} এই বারে বসেন না। অনুগ্রহ করে ওনার চেম্বারের দিন (${doctor.availableDays.join(', ')}) থেকে তারিখ বেছে নিন।`);
+                                        // 🌟 Replaced alert with toast
+                                        toast.warning(`Sorry, Dr. ${doctor.doctorName} is not available on this day. Please select a date from the chamber days (${doctor.availableDays.join(', ')}).`);
                                         setSelectedDate('');
                                         setSelectedDay('');
                                     } else {
@@ -207,13 +210,14 @@ const DoctorDetailPage = () => {
                             )}
                         </div>
 
-                        {/* ⏰ ২. টাইম স্লট সিলেকশন */}
+                        {/* ⏰ 2. Time Slot Selection */}
                         <div>
                             <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
                                 ⏰ 2. Available Slots {selectedDay && `for ${selectedDay}`}
                             </h3>
                             {!selectedDate ? (
-                                <p className="text-xs text-gray-400 italic">অনুগ্রহ করে প্রথমে ডাক্তারের চেম্বারের দিন অনুযায়ী একটি তারিখ সিলেক্ট করুন।</p>
+                                // 🌟 Converted from Bengali to English
+                                <p className="text-xs text-gray-400 italic">Please select a calendar date first according to the doctors chamber availability.</p>
                             ) : (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {doctor.availableSlots?.map((slot, index) => {
@@ -248,24 +252,23 @@ const DoctorDetailPage = () => {
                             onSubmit={async (e) => {
                                 e.preventDefault(); 
 
-                                // 🔐 Better Auth থেকে রিয়েল-টাইম লগইন সেশন ডাইনামিকালি রিসিভ করা হচ্ছে
                                 const session = await authClient.getSession();
                                 
                                 if (!session?.data?.user) {
-                                    alert("অ্যাপয়েন্টমেন্ট বুক করার জন্য অনুগ্রহ করে আগে লগইন করুন।");
+                                    // 🌟 Replaced alert with toast
+                                    toast.error("Please login first to book an appointment! 🔒");
                                     return;
                                 }
 
                                 if (!selectedDate || !selectedSlot) {
-                                    alert("অনুগ্রহ করে অ্যাপয়েন্টমেন্টের তারিখ এবং টাইম স্লট সিলেক্ট করুন।");
+                                    // 🌟 Replaced alert with toast
+                                    toast.warning("Please select an appointment date and time slot.");
                                     return;
                                 }
 
-                                // 📧 লগইন করা রিয়েল পেশেন্টের তথ্য ভেরিয়েবলে নেওয়া হচ্ছে
                                 const currentUserEmail = session.data.user.email;
                                 const currentUserName = session.data.user.name || "Anonymous Patient";
                                 
-                                // 🔥 ডাইনামিক ডেটা অবজেক্ট স্ট্রাকচার তৈরি হলো
                                 const bookingData = {
                                     doctorId: doctor._id,
                                     doctorName: doctor.doctorName,
@@ -278,10 +281,10 @@ const DoctorDetailPage = () => {
                                     appointmentTime: formatTime12Hour(selectedSlot), 
                                     patientProblem: patientProblem, 
                                     
-                                    userEmail: currentUserEmail,   // ✅ ডাইনামিক রিয়েল ইমেইল
+                                    userEmail: currentUserEmail,   
                                     userName: currentUserName,  
-                                    patientEmail: currentUserEmail,   // ✅ ওভারভিউ পেজ যদি এই নামে খোঁজে
-                                    patientName: currentUserName,     // ✅ ডাইনামিক রিয়েল নাম
+                                    patientEmail: currentUserEmail,  
+                                    patientName: currentUserName,     
                                     status: "Pending",             
                                     createdAt: new Date()
                                 };
@@ -295,23 +298,26 @@ const DoctorDetailPage = () => {
                                     });
 
                                     if (response.ok) {
-                                        alert("অ্যাপয়েন্টমেন্ট সফলভাবে বুক করা হয়েছে! 🎉");
+                                        // 🌟 Replaced alert with toast
+                                        toast.success("Appointment successfully booked! 🎉");
                                         router.push('/dashboard/patient'); 
                                     } else {
                                         const errData = await response.json();
                                         console.error("Booking failed on server:", errData.error);
-                                        alert("বুকিং ব্যর্থ হয়েছে। আবার চেষ্টা করুন।");
+                                        // 🌟 Replaced alert with toast
+                                        toast.error("Booking failed. Please try again.");
                                     }
                                 } catch (error) {
                                     console.error("Network Error:", error);
-                                    alert("সার্ভার কানেকশন এরর! অনুগ্রহ করে ব্যাকএন্ড চালু আছে কিনাチェック করুন।");
+                                    // 🌟 Replaced alert with toast
+                                    toast.error("Server connection error! Please verify your backend API.");
                                 } finally {
                                     setBookingLoading(false);
                                 }
                             }}
                             className="space-y-6"
                         >
-                            {/* 📝 ৩. পেশেন্টের সমস্যা লেখার ইনপুট ফিল্ড */}
+                            {/* 📝 3. Describe Your Problem / Symptoms */}
                             <div>
                                 <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
                                     📝 3. Describe Your Problem / Symptoms
@@ -319,14 +325,15 @@ const DoctorDetailPage = () => {
                                 <textarea
                                     rows="4"
                                     required
-                                    placeholder="আপনার সমস্যা বা লক্ষণগুলো এখানে সংক্ষেপে লিখুন (যেমন: ২ দিন ধরে জ্বর, কাশি...)"
+                                    // 🌟 Converted placeholder from Bengali to English
+                                    placeholder="Briefly describe your symptoms or medical concerns here (e.g., fever for 2 days, dry cough...)"
                                     value={patientProblem} 
                                     onChange={(e) => setPatientProblem(e.target.value)}
                                     className="w-full p-4 text-sm font-medium border border-gray-200 rounded-2xl focus:outline-none focus:border-[#FF85BB] bg-gray-50/50 text-black placeholder-gray-400"
                                 />
                             </div>
 
-                            {/* 🚀 ৪. শিডিউল রিভিউ ও সাবমিট বাটন */}
+                            {/* 🚀 4. Schedule Review & Submit Button */}
                             <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <div className="text-center sm:text-left">
                                     <p className="text-xs text-gray-400 font-semibold">Your Selected Schedule:</p>

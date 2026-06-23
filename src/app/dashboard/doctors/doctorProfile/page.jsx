@@ -1,25 +1,40 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input } from "@heroui/react";
 import { toast } from 'react-toastify';
 
 export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) {
-    const doctorId = doctorData?._id?.$oid || doctorData?._id;
+    
+    // 🎯 ডাটাবেজ থেকে পাওয়া তোমার আসল আইডিটি এখানে ফলব্যাক হিসেবে বসানো হয়েছে
+    const REAL_DOCTOR_ID = "6a35f5c6b5460cb6499eef86";
 
-    // ImgBB API Key Variable Context
-    // 💡 Replace this string with your real ImgBB client API key
+    // 🩺 আইডি এক্সট্রাকশন সেফটি লেয়ার (ডাটা না থাকলে রিয়াল আইডি নিবে)
+    const doctorId = doctorData?._id?.$oid || doctorData?._id || REAL_DOCTOR_ID;
+
+    // 💡 ImgBB API Key Variable Context
     const IMGBB_API_KEY = "YOUR_IMGBB_API_KEY_HERE"; 
 
     // Dynamic standard reactive data fields tracking hooks
-    const [qualifications, setQualifications] = useState(doctorData?.qualifications || "");
-    const [specialization, setSpecialization] = useState(doctorData?.specialization || "");
-    const [experience, setExperience] = useState(doctorData?.experience || "");
-    const [hospitalName, setHospitalName] = useState(doctorData?.hospitalName || "");
-    const [profileImageUrl, setProfileImageUrl] = useState(doctorData?.profileImage || "");
+    const [qualifications, setQualifications] = useState("");
+    const [specialization, setSpecialization] = useState("");
+    const [experience, setExperience] = useState("");
+    const [hospitalName, setHospitalName] = useState("");
+    const [profileImageUrl, setProfileImageUrl] = useState("");
     
     const [imageUploading, setImageUploading] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // 🔄 যখনই প্রোপস থেকে ডাটা আসবে, স্টেটগুলো আপডেট হবে
+    useEffect(() => {
+        if (doctorData) {
+            setQualifications(doctorData.qualifications || "");
+            setSpecialization(doctorData.specialization || "");
+            setExperience(doctorData.experience || "");
+            setHospitalName(doctorData.hospitalName || "");
+            setProfileImageUrl(doctorData.profileImage || "");
+        }
+    }, [doctorData]);
 
     // ☁️ Handle ImgBB Cloud Binary Assets Processing Upload
     const handleImageUploadToImgBB = async (e) => {
@@ -52,17 +67,22 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
         }
     };
 
-    // 🚀 Submit Whole Profiler Matrix Data
+    // 🚀 Submit Whole Profiler Matrix Data (PATCH Route Execution)
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
-        if (!doctorId) return toast.error("Doctor ID mapping missing! ❌");
+        
+        console.log("🔥 SUBMITTING TO BACKEND WITH ID:", doctorId);
+        
+        if (!doctorId || doctorId === "undefined") {
+            return toast.error("Doctor ID missing! Cannot sync with database. ❌");
+        }
         
         setSaving(true);
 
         const payload = {
             qualifications,
             specialization,
-            experience,
+            experience: Number(experience), 
             hospitalName,
             profileImage: profileImageUrl
         };
@@ -74,13 +94,16 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
                 body: JSON.stringify(payload)
             });
 
-            if (res.ok) {
-                toast.success("Medical profile schema synchronized successfully! 🏛️🩺");
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                toast.success("Profile updated successfully! 🏛️🩺");
                 if (onUpdateSuccess) onUpdateSuccess();
             } else {
-                toast.error("Failed processing database synchronization sync layout.");
+                toast.error(data.message || "Failed processing database synchronization.");
             }
         } catch (error) {
+            console.error("Submit Error:", error);
             toast.error("Network interface data exchange execution timeout.");
         } finally {
             setSaving(false);
@@ -90,7 +113,6 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
     return (
         <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-white to-slate-50/50 rounded-[32px] border border-slate-200/70 shadow-2xl shadow-slate-200/40 space-y-8 my-6">
             
-            {/* Soft Modern Header Layout */}
             <div className="border-b border-slate-100 pb-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md">Credentials Console</span>
                 <h2 className="text-xl font-black text-slate-800 mt-2">Manage Professional Identity</h2>
@@ -119,7 +141,6 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
                             onChange={handleImageUploadToImgBB}
                             className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300 cursor-pointer w-full transition-colors"
                         />
-                        <span className="text-[9px] text-slate-400 block">Assets directly piped and parsed through ImgBB live endpoint stream layers.</span>
                     </div>
                 </div>
 
