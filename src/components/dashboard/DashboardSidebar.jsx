@@ -53,7 +53,7 @@ useEffect(() => {
       { icon: House, label: "Overview", href: "/dashboard/doctors" },
       { icon: LayoutSideContentLeft, label: "Manage Schedule & Days", href: "/dashboard/doctors/doctorTimeManage" },
       { icon: Magnifier, label: "Appointment Requests", href: "/dashboard/doctors/patientRequests" },
-      { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctors/prescriptions" },
+      { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctors/patientsPrescription" },
       { icon: Person, label: "Profile Settings", href: "/dashboard/doctors/doctorProfile" },
     ],
     // 👑 Admin Menu
