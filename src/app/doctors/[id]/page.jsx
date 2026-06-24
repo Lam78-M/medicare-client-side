@@ -2,15 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Chip, Spinner, Avatar, Input } from "@heroui/react";
-import { authClient } from "@/lib/auth-client"; 
-import { toast } from 'react-toastify'; // 🌟 Added react-toastify import
-import Link from 'next/link';
+import { authClient } from "@/lib/auth-client"; // Better Auth Client
+import { toast } from 'react-toastify'; 
 
 const DoctorDetailPage = () => {
     const { id } = useParams();
     const router = useRouter();
     const [doctor, setDoctor] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // 🔒 Correct way to get Session in Client Component using Better Auth Hook
+    const { data: session, isPending: isSessionLoading } = authClient.useSession();
+
+    // Booking Form States
     const [selectedDay, setSelectedDay] = useState('');
     const [selectedSlot, setSelectedSlot] = useState('');
     const [selectedDate, setSelectedDate] = useState(''); 
@@ -37,16 +41,17 @@ const DoctorDetailPage = () => {
                 console.error("Error fetching doctor details:", error);
                 toast.error("Failed to fetch doctor details! ❌");
             } finally {
-                loading && setLoading(false);
+                setLoading(false);
             }
         };
+
         if (id) fetchDoctorDetails();
     }, [id]);
 
-    if (loading) {
+    if (loading || isSessionLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
-                <Spinner size="lg" style={{ color: '#FF85BB' }} label="Loading Doctor Profile..." />
+                <Spinner size="lg" style={{ color: '#FF85BB' }} label="Loading Profile & Session..." />
             </div>
         );
     }
@@ -60,13 +65,18 @@ const DoctorDetailPage = () => {
         );
     }
 
+    // 🚨 Extract and normalize role from verified useSession hook
+    const currentUser = session?.user;
+    const userRole = currentUser?.role ? currentUser.role.toLowerCase() : '';
+    const isRestrictedRole = userRole === 'doctors' || userRole === 'admin';
+
     return (
         <div className="min-h-screen py-10 px-4 md:px-12 bg-[#F5F5F5]">
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 
-                {/* ================= LEFT COLUMN ================= */}
+                {/* 🏥 Left Column: Profile Card */}
                 <div className="lg:sticky lg:top-6">
-                    <Card className="border border-none bg-white p-6 rounded-3xl shadow-xl flex flex-col items-center text-center relative overflow-hidden">
+                    <Card className="bg-white p-6 rounded-3xl border border-[#2652b8]/20 shadow-[0_10px_25px_rgba(2,26,84,0.15)] flex flex-col items-center text-center relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-10 -mt-10 opacity-20" style={{ backgroundColor: '#FFCEE3' }}></div>
                         
                         <Avatar 
@@ -106,22 +116,15 @@ const DoctorDetailPage = () => {
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Primary Hospital</p>
                                 <p className="text-sm font-bold truncate" style={{ color: '#021A54' }}>🏢 {doctor.hospitalName}</p>
                             </div>
-                            {(doctor.doctorEmail || doctor.email) && (
-                                <div className="border-t border-gray-200/60 pt-2">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Doctor Email</p>
-                                    <p className="text-sm font-semibold truncate text-gray-600">✉️ {doctor.doctorEmail || doctor.email}</p>
-                                </div>
-                            )}
                         </div>
                     </Card>
                 </div>
 
-                {/* ================= RIGHT COLUMN ================= */}
+                {/* 📋 Right Column: Profile Info & Booking Form */}
                 <div className="lg:col-span-2 space-y-6">
                     
-                    {/* Symptoms Presentation */}
                     {doctor.symptomsPresentation && (
-                        <Card className="border-none shadow-sm bg-white overflow-hidden rounded-3xl">
+                        <Card className="border border-[#2652b8]/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white overflow-hidden rounded-3xl">
                             <div className="h-2 w-full" style={{ backgroundColor: '#FF85BB' }}></div>
                             <div className="p-6">
                                 <h3 className="text-lg font-bold mb-2" style={{ color: '#021A54' }}>
@@ -134,8 +137,8 @@ const DoctorDetailPage = () => {
                         </Card>
                     )}
 
-                    {/* Expertise & Symptoms Treated */}
-                    <Card className="border-none shadow-sm bg-white p-6 rounded-3xl">
+                    {/* Expertise Panel */}
+                    <Card className="border border-[#2652b8]/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white p-6 rounded-3xl">
                         <h3 className="text-md font-bold uppercase tracking-wider mb-4" style={{ color: '#021A54' }}>
                             🩺 Expertise & Symptoms Treated
                         </h3>
@@ -144,8 +147,7 @@ const DoctorDetailPage = () => {
                                 <Chip 
                                     key={index} 
                                     variant="flat" 
-                                    className="px-3 py-3 font-semibold text-xs transition-transform hover:scale-105"
-                                    style={{ backgroundColor: '#F5F5F5', color: '#021A54', border: '1px solid #FFCEE3' }}
+                                    className="px-3 py-3 font-semibold text-xs text-[#021A54] bg-[#F5F5F5] border border-[#FFCEE3]"
                                 >
                                     • {symptom}
                                 </Chip>
@@ -153,10 +155,10 @@ const DoctorDetailPage = () => {
                         </div>
                     </Card>
 
-                    {/* Booking Form Card */}
-                    <Card className="border-none shadow-sm bg-white p-6 rounded-3xl space-y-6">
+                    {/* 📅 APPOINTMENT BOOKING FORM SYSTEM */}
+                    <Card className="border border-[#2652b8]/10 shadow-[0_4px_20px_rgba(0,0,0,0.03)] bg-white p-6 rounded-3xl space-y-6">
                         
-                        {/* 📅 1. Select Appointment Date */}
+                        {/* 1. Select Appointment Date */}
                         <div>
                             <h3 className="text-md font-bold uppercase tracking-wider mb-1" style={{ color: '#021A54' }}>
                                 📅 1. Select Appointment Date
@@ -193,8 +195,7 @@ const DoctorDetailPage = () => {
                                     const dayName = daysOfWeek[chosenDate.getDay()];
 
                                     if (doctor.availableDays && !doctor.availableDays.includes(dayName)) {
-                                        // 🌟 Replaced alert with toast
-                                        toast.warning(`Sorry, Dr. ${doctor.doctorName} is not available on this day. Please select a date from the chamber days (${doctor.availableDays.join(', ')}).`);
+                                        toast.warning(`Sorry, Dr. ${doctor.doctorName} is not available on this day.`);
                                         setSelectedDate('');
                                         setSelectedDay('');
                                     } else {
@@ -205,24 +206,19 @@ const DoctorDetailPage = () => {
                                 }}
                                 className="max-w-xs font-semibold text-black"
                             />
-                            {selectedDay && (
-                                <p className="text-xs text-green-600 font-bold mt-2">✓ Selected Day: {selectedDay}</p>
-                            )}
                         </div>
 
-                        {/* ⏰ 2. Time Slot Selection */}
+                        {/* 2. Available Slots */}
                         <div>
                             <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
                                 ⏰ 2. Available Slots {selectedDay && `for ${selectedDay}`}
                             </h3>
                             {!selectedDate ? (
-                                // 🌟 Converted from Bengali to English
-                                <p className="text-xs text-gray-400 italic">Please select a calendar date first according to the doctors chamber availability.</p>
+                                <p className="text-xs text-gray-400 italic">Please select a calendar date first.</p>
                             ) : (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                     {doctor.availableSlots?.map((slot, index) => {
                                         const isSelected = selectedSlot === slot.time;
-                                        
                                         return (
                                             <button
                                                 key={index}
@@ -231,15 +227,12 @@ const DoctorDetailPage = () => {
                                                 onClick={() => setSelectedSlot(slot.time)}
                                                 className={`p-3 text-xs font-extrabold rounded-xl border transition-all duration-300 text-center
                                                     ${slot.isBooked ? 'bg-gray-100 text-gray-400 border-gray-200 line-through cursor-not-allowed' : ''}
-                                                    ${!slot.isBooked && !isSelected ? 'bg-pink-50 text-[#FF8BB] border-[#FFCEE3] hover:bg-[#FF85BB] hover:text-white' : ''}
+                                                    ${!slot.isBooked && !isSelected ? 'bg-pink-50 text-[#FF85BB] border-[#FFCEE3] hover:bg-[#FF85BB] hover:text-white' : ''}
                                                     ${isSelected ? 'text-white border-[#FF85BB] shadow-md' : ''}
                                                 `}
                                                 style={isSelected ? { backgroundColor: '#FF85BB' } : {}}
                                             >
                                                 {formatTime12Hour(slot.time)}
-                                                {slot.isBooked && (
-                                                    <span className="block text-[9px] font-medium text-gray-400 no-underline">Booked</span>
-                                                )}
                                             </button>
                                         );
                                     })}
@@ -247,28 +240,29 @@ const DoctorDetailPage = () => {
                             )}
                         </div>
 
-                        {/* ================= FORM INSIDE ================= */}
+                        {/* Form Submission Execution */}
                         <form 
-                            onSubmit={async (e) => {
-                                e.preventDefault(); 
+                             onSubmit={async (e) => {
+    e.preventDefault(); 
+    
+    if (!currentUser) {
+        toast.error("Please login first to book an appointment! 🔒");
+        return;
+    }
 
-                                const session = await authClient.getSession();
-                                
-                                if (!session?.data?.user) {
-                                    // 🌟 Replaced alert with toast
-                                    toast.error("Please login first to book an appointment! 🔒");
-                                    return;
-                                }
+    // 🚨 100% BULLETPROOF ROLE CHECKING (Handles 'doctor', 'doctors', 'admin', 'admins')
+    const userRole = currentUser?.role ? currentUser.role.toLowerCase().trim() : '';
+    
+    if (userRole.includes('doctor') || userRole.includes('admin')) {
+        toast.error(`Booking Failed! Accounts with role "${currentUser.role}" are not permitted to book appointments. ❌`);
+        return; // এখানেই কোড এক্সিকিউশন স্টপ করে দেবে, ব্যাকএন্ডে রিকোয়েস্ট যাবেই না!
+    }
 
-                                if (!selectedDate || !selectedSlot) {
-                                    // 🌟 Replaced alert with toast
-                                    toast.warning("Please select an appointment date and time slot.");
-                                    return;
-                                }
+    if (!selectedDate || !selectedSlot) {
+        toast.warning("Please complete schedule selection.");
+        return;
+    }
 
-                                const currentUserEmail = session.data.user.email;
-                                const currentUserName = session.data.user.name || "Anonymous Patient";
-                                
                                 const bookingData = {
                                     doctorId: doctor._id,
                                     doctorName: doctor.doctorName,
@@ -280,11 +274,8 @@ const DoctorDetailPage = () => {
                                     appointmentDay: selectedDay,   
                                     appointmentTime: formatTime12Hour(selectedSlot), 
                                     patientProblem: patientProblem, 
-                                    
-                                    userEmail: currentUserEmail,   
-                                    userName: currentUserName,  
-                                    patientEmail: currentUserEmail,  
-                                    patientName: currentUserName,     
+                                    userEmail: currentUser.email,   
+                                    userName: currentUser.name || "Anonymous Patient",  
                                     status: "Pending",             
                                     createdAt: new Date()
                                 };
@@ -298,26 +289,20 @@ const DoctorDetailPage = () => {
                                     });
 
                                     if (response.ok) {
-                                        // 🌟 Replaced alert with toast
                                         toast.success("Appointment successfully booked! 🎉");
                                         router.push('/dashboard/patient'); 
                                     } else {
-                                        const errData = await response.json();
-                                        console.error("Booking failed on server:", errData.error);
-                                        // 🌟 Replaced alert with toast
-                                        toast.error("Booking failed. Please try again.");
+                                        toast.error("Booking verification rejected by server.");
                                     }
                                 } catch (error) {
-                                    console.error("Network Error:", error);
-                                    // 🌟 Replaced alert with toast
-                                    toast.error("Server connection error! Please verify your backend API.");
+                                    console.error(error);
+                                    toast.error("API server communication failed.");
                                 } finally {
                                     setBookingLoading(false);
                                 }
                             }}
                             className="space-y-6"
                         >
-                            {/* 📝 3. Describe Your Problem / Symptoms */}
                             <div>
                                 <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
                                     📝 3. Describe Your Problem / Symptoms
@@ -325,34 +310,43 @@ const DoctorDetailPage = () => {
                                 <textarea
                                     rows="4"
                                     required
-                                    // 🌟 Converted placeholder from Bengali to English
-                                    placeholder="Briefly describe your symptoms or medical concerns here (e.g., fever for 2 days, dry cough...)"
+                                    placeholder={isRestrictedRole ? "Booking is restricted for Doctor/Admin accounts." : "Briefly describe your health issues..."}
+                                    disabled={isRestrictedRole}
                                     value={patientProblem} 
                                     onChange={(e) => setPatientProblem(e.target.value)}
-                                    className="w-full p-4 text-sm font-medium border border-gray-200 rounded-2xl focus:outline-none focus:border-[#FF85BB] bg-gray-50/50 text-black placeholder-gray-400"
+                                    className="w-full p-4 text-sm font-medium border border-gray-200 rounded-2xl focus:outline-none focus:border-[#FF85BB] bg-gray-50/50 text-black disabled:cursor-not-allowed disabled:opacity-60"
                                 />
                             </div>
 
-                            {/* 🚀 4. Schedule Review & Submit Button */}
                             <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <div className="text-center sm:text-left">
                                     <p className="text-xs text-gray-400 font-semibold">Your Selected Schedule:</p>
                                     <p className="text-sm font-bold" style={{ color: '#021A54' }}>
-                                        {selectedDate && selectedSlot ? `🗓️ ${selectedDate} (${selectedDay}) at 🕒 ${formatTime12Hour(selectedSlot)}` : '❌ No schedule selected'}
+                                        {selectedDate && selectedSlot ? `🗓️ ${selectedDate} at 🕒 ${formatTime12Hour(selectedSlot)}` : '❌ No schedule selected'}
                                     </p>
                                 </div>
                                 
+                                {/* 🛠️ Fix: Disabled button if user is doctor or admin */}
                                 <Button 
-                                    type="submit"
-                                    isLoading={bookingLoading} 
-                                    className="font-black px-10 py-6 rounded-2xl shadow-lg text-white text-sm transition-all duration-300 active:scale-95 hover:opacity-90"
-                                    style={{ backgroundColor: '#FF85BB' }}
-                                >
-                                    Confirm Appointment 🚀
-                                </Button>
+    type="submit"
+    isDisabled={isRestrictedRole}
+    isLoading={bookingLoading} 
+    className={`font-black px-10 py-6 rounded-2xl shadow-lg text-white text-sm transition-all duration-300 ${
+        isRestrictedRole 
+            ? 'bg-red-500 cursor-not-allowed animate-pulse shadow-md shadow-red-200' 
+            : 'bg-[#FF85BB]'
+    }`}
+>
+    {isRestrictedRole ? (
+        <span className="flex items-center gap-1">
+            🛑 Restricted for {currentUser?.role || 'Staff'}
+        </span>
+    ) : (
+        'Confirm Appointment 🚀'
+    )}
+</Button>
                             </div>
                         </form>
-
                     </Card>
                 </div>
 

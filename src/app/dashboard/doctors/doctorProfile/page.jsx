@@ -111,7 +111,7 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
     };
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-white to-slate-50/50 rounded-[32px] border border-slate-200/70 shadow-2xl shadow-slate-200/40 space-y-8 my-6">
+        <div className="max-w-3xl mx-auto p-6 bg-gradient-to-br from-white to-slate-50/50 rounded-[32px] border border-[#FF85BB] shadow-2xl shadow-slate-200/40 space-y-8 my-6">
             
             <div className="border-b border-slate-100 pb-4">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2.5 py-1 rounded-md">Credentials Console</span>
@@ -203,7 +203,7 @@ export default function DoctorProfileBioEditor({ doctorData, onUpdateSuccess }) 
                         type="submit" 
                         isLoading={saving}
                         disabled={imageUploading}
-                        className="bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl px-10 py-5 text-xs tracking-wide shadow-md shadow-slate-900/10 transition-colors"
+                        className="bg-[#021A54] hover:bg-blue-800 text-white font-bold rounded-xl px-10 py-5 text-xs tracking-wide shadow-md shadow-slate-900/10 transition-colors"
                     >
                         Sync Corporate Bio 🚀
                     </Button>

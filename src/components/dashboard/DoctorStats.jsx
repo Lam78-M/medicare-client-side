@@ -5,7 +5,7 @@ import { authClient } from "@/lib/auth-client";
 import { Spinner } from "@heroui/react";
 
 export default function DoctorStats() {
-  // 🌟 Better Auth useSession ഹുക
+
   const { data: session, isPending: isSessionPending } = authClient.useSession();
 
   const [upcomingCount, setUpcomingCount] = useState(0);
@@ -16,35 +16,28 @@ export default function DoctorStats() {
 
   useEffect(() => {
     const fetchDoctorStats = async () => {
-      // 🚨 কনসোলে চেক করার জন্য: সেশন লোড হওয়ার পর ইমেইল কী আসছে তা দেখাবে
       if (!isSessionPending) {
         console.log("Better Auth Session User Email:", session?.user?.email);
       }
-
       if (isSessionPending || !session?.user?.email) return;
-
       try {
         setLoading(true);
         const doctorEmail = session.user.email;
 
-        // 🎯 ব্যাকএন্ড এপিআই কল (যেহেতু ব্যাকএন্ডে শুধু email কুয়েরি খোঁজা হচ্ছে)
         const appointmentRes = await fetch(`http://localhost:5000/api/appointments/doctor?email=${doctorEmail}`);
         
         if (appointmentRes.ok) {
           const resData = await appointmentRes.json();
-          console.log("Fetched Appointments Data:", resData); // 🚨 ডাটা আসলো কি না কনসোলে দেখবে
+          console.log("Fetched Appointments Data:", resData); 
 
-          // সেফটি লেয়ার
           const appointments = Array.isArray(resData) ? resData : [];
           
-          // কেস-ইনসেন্সিটিভ ফিল্টারিং (ডাটাবেজে 'Pending' বা 'Approved' এর জন্য)
           const upcoming = appointments.filter(app => app?.status?.toLowerCase() === 'approved');
           const pending = appointments.filter(app => app?.status?.toLowerCase() === 'pending');
 
           setUpcomingCount(upcoming.length);
           setPendingCount(pending.length);
 
-          // ডাইনামিক ট্রানজেকশন ফি যোগফল
           const totalEarnings = upcoming.reduce((sum, app) => {
             const fee = Number(app.consultationFee) || 0;
             return sum + fee;
@@ -52,8 +45,6 @@ export default function DoctorStats() {
           
           setTotalTransactions(totalEarnings);
         }
-
-        // ২. রিভিউ কাউন্ট ফেচ
         const reviewRes = await fetch(`http://localhost:5000/api/v1/reviews/doctor/${doctorEmail}`);
         if (reviewRes.ok) {
           const reviewData = await reviewRes.json();

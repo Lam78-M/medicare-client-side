@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// 🟢 Better Auth ক্লায়েন্ট হেল্পার ইমপোর্ট করলাম
+import { authClient } from "@/lib/auth-client"; 
 
 export default function PrescriptionHistoryPage() {
     // MongoDB থেকে আসা ডাটার স্টেট
     const [prescriptionsList, setPrescriptionsList] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // 🟢 Better Auth থেকে কারেন্ট ডক্টর সেশন রিড করা
+    const { data: session, isPending: authPending } = authClient.useSession();
+    const doctorEmail = session?.user?.email;
 
     // 🔄 MongoDB Atlas থেকে সব ডাটা লোড করার ফাংশন
     const fetchPrescriptions = async () => {
@@ -24,10 +30,47 @@ export default function PrescriptionHistoryPage() {
         }
     };
 
-    // পেজ লোড হওয়ার সাথে সাথে ডাটা নিয়ে আসবে
+    // পেজ লোড হওয়ার সাথে সাথে ডাটা নিয়ে আসবে
     useEffect(() => {
         fetchPrescriptions();
     }, []);
+
+    // 🛑 STRICT DOCTOR FILTER MATRIX: লগইন করা ডক্টরের ডাটা আলাদা করা
+    const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
+    
+    const myFilteredPrescriptions = prescriptionsList.filter((pres) => {
+        if (!pres) return false;
+        
+        // ব্যাকএন্ডে আমরা যে 'doctorEmail' ফিল্ডটি সেভ করেছি, সেটি চেক করা হচ্ছে
+        const presDoctorEmail = pres.doctorEmail || pres.doctor_email;
+        
+        if (presDoctorEmail && currentDoctorEmail) {
+            return presDoctorEmail.trim().toLowerCase() === currentDoctorEmail;
+        }
+        
+        return false; // ইমেইল না মিললে বা ডাটা ওল্ড হলে সিকিউরিটির জন্য হিস্ট্রিতে দেখাবে না
+    });
+
+    // সেশন লোড হওয়া পর্যন্ত ওয়েট করা
+    if (authPending) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-white">
+                <span className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#021A54]"></span>
+            </div>
+        );
+    }
+
+    // যদি কোনো ডক্টর লগইন ছাড়া এই পেজে আসে
+    if (!session) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-white px-4">
+                <div className="bg-red-50 p-6 rounded-3xl border border-red-200 text-center max-w-sm">
+                    <p className="text-red-600 font-bold">⚠️ Access Denied!</p>
+                    <p className="text-xs text-gray-500 mt-1">Please log in with your doctor account to view your prescription history.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 w-full">
@@ -37,7 +80,8 @@ export default function PrescriptionHistoryPage() {
                 <div className="flex justify-between items-center border-b border-gray-200 pb-4">
                     <div>
                         <h1 className="text-2xl font-bold text-[#021A54]">Prescription History</h1>
-                        <p className="text-xs text-gray-500 mt-1">Total Prescriptions: {prescriptionsList.length}</p>
+                        {/* 🎯 এখানে এখন ফিল্টার করা টোটাল কাউন্ট দেখাবে */}
+                        <p className="text-xs text-gray-500 mt-1">Your Total Prescriptions: {myFilteredPrescriptions.length}</p>
                     </div>
                     <button 
                         onClick={fetchPrescriptions}
@@ -47,26 +91,25 @@ export default function PrescriptionHistoryPage() {
                     </button>
                 </div>
 
-                {/* লোডিং স্টেট */}
                 {loading ? (
                     <div className="flex justify-center items-center py-20">
                         <span className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#021A54]"></span>
                     </div>
-                ) : prescriptionsList.length === 0 ? (
-                    /* ডাটা না থাকলে এই ভিউ দেখাবে */
+                ) : myFilteredPrescriptions.length === 0 ? (
+                    /* ডাটা না থাকলে বা কারেন্ট ডক্টরের কোনো ডাটা ম্যাচ না করলে এই ভিউ দেখাবে */
                     <div className="bg-white p-16 text-center text-gray-400 font-bold rounded-3xl border border-dashed border-gray-200 shadow-sm">
-                        No prescriptions saved in MongoDB yet. 📋
+                        No prescriptions issued by you found in MongoDB. 📋
                     </div>
-                ) : (
-                    /* 🗂️ প্রেসক্রিপশন কার্ড লিস্ট */
+                ) : (  
+                    /* 🗂️ ডক্টরের নিজস্ব প্রেসক্রিপশন কার্ড লিস্ট */
                     <div className="space-y-4">
-                        {prescriptionsList.map((pres) => (
+                        {myFilteredPrescriptions.map((pres) => (
                             <div 
                                 key={pres._id} 
                                 className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 relative overflow-hidden"
                             >
                                 {/* বর্ডার টপ ডেকোরেশন লাইন */}
-                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-pink-500"></div>
+                                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#ca3a9f]"></div>
                                 
                                 <div className="flex justify-between items-start mb-4">
                                     <div>

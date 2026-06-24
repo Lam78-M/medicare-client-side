@@ -15,7 +15,8 @@ export default function AboutUs() {
     <div className="min-h-screen bg-[#F5F5F5] py-16 px-4 md:px-10">
       <div className="max-w-6xl mx-auto">
         
-        {/* Section 1: Hero Intro with Framer Motion Animation */}
+       {/* hero ui with framer motion */}
+
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -34,7 +35,6 @@ export default function AboutUs() {
           </p>
         </motion.div>
 
-        {/* Section 2: Core Perks / "Why Choose Us" Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20 items-center">
           <motion.div 
             initial={{ opacity: 0, x: -30 }}
@@ -65,7 +65,6 @@ export default function AboutUs() {
             </div>
           </motion.div>
 
-          {/* Graphical Mock Side Content wrapper */}
           <motion.div 
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -83,7 +82,7 @@ export default function AboutUs() {
             </div>
           </motion.div>
         </div>
-        {/* Section 3: Platform Statistics (Required Dynamic Section style match) */}
+     
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}

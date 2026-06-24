@@ -2,15 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-
+// 🎯 React Toastify ইমপোর্ট করা হলো
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const DoctorsPage = () => {
     const [doctors, setDoctors] = useState([]);  
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    // 🔍 সার্চ ও ফিল্টার স্টেট
+    // View Toggle State: 'grid' or 'table'
+    const [viewMode, setViewMode] = useState('grid');
+
+    // Search filters state
     const [search, setSearch] = useState('');
     const [selectedSpecialty, setSelectedSpecialty] = useState('');
     const [sortOrder, setSortOrder] = useState(''); 
@@ -24,11 +28,40 @@ const DoctorsPage = () => {
         "Ophthalmology"
     ];
 
-    // 🔄 রিসেট ফাংশন (এক ক্লিকে সব ফিল্টার ক্লিয়ার করার জন্য)
     const handleReset = () => {
         setSearch('');
         setSelectedSpecialty('');
         setSortOrder('');
+    };
+
+    // 🎯 handleBookingClick ফাংশন রিঅ্যাক্ট টোস্ট সহ
+    const handleBookingClick = (doctor, doctorId) => {
+        const currentStatus = doctor?.verificationStatus?.toLowerCase();
+
+        if (currentStatus === "pending") {
+ toast.warn("This doctor is currently under verification. Booking is disabled until Admin approval!", {
+    position: "bottom-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    // 🎯 ইনলাইন স্টাইল দিয়ে ব্যাকগ্রাউন্ড কালার জোরপূর্বক সেট করা হলো
+    style: {
+        backgroundColor: '#021A54',
+        color: '#ffffff',
+        borderRadius: '12px'
+    },
+    // প্রোগ্রেস বারের কালার (গোলাপী/পিঙ্ক শেড)
+    progressStyle: {
+        backgroundColor: '#FF85BB'
+    }
+});
+            return; 
+        }
+
+        router.push(`/doctors/${doctorId}`);  
     };
 
     useEffect(() => {
@@ -70,36 +103,35 @@ const DoctorsPage = () => {
     return (
         <div className="min-h-screen py-12 px-4 md:px-10" style={{ backgroundColor: '#F5F5F5' }}>
             
-            {/* পেজ হেডার */}
+            {/* 🎯 টোস্ট মেসেজ দেখানোর কন্টেইনার */}
+            <ToastContainer />
+
+            {/* Header Section */}
             <div className="max-w-7xl mx-auto text-center mb-10">
                 <h1 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight" style={{ color: '#021A54' }}>
                     Find Your Specialist
                 </h1>
-                <div className="w-24 h-1 mx-auto rounded-full mb-4" style={{ backgroundColor: '#FF85BB' }}></div>
+                <div className="w-24 h-1 mx-auto rounded-full mb-4" style={{ backgroundColor: '#021A54' }}></div>
             </div>
 
-            {/* 🔍 ফিল্টার এবং রিসেট বার */}
-            <div className="max-w-7xl mx-auto mb-10 bg-[white] p-5 rounded-2xl shadow-sm border border-[#fcc6de] flex flex-col gap-4">
-                
-                {/* ইনপুট গ্রিড (৩ টি ফিল্টার পাশাপাশি) */}
+            {/* Filter Controls Box */}
+            <div className="max-w-7xl mx-auto mb-6 bg-white p-5 rounded-3xl shadow-sm border border-blue-900/10 flex flex-col gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    {/* ১. নাম দিয়ে সার্চ */}
                     <div className="w-full">
                         <input 
                             type="text" 
                             placeholder="Search by Doctor Name..." 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="input input-bordered w-full bg-pink-50 border-gray-200 focus:outline-none focus:border-[#FF85BB] p-3 rounded-xl text-sm text-black"
+                            className="w-full bg-gray-50 border border-gray-200 focus:outline-none focus:border-[#021A54] p-3 rounded-xl text-sm text-black"
                         />
                     </div>
 
-                    {/* ২. স্পেশালাইজেশন ফিল্টার */}
                     <div className="w-full">
                         <select 
                             value={selectedSpecialty} 
                             onChange={(e) => setSelectedSpecialty(e.target.value)}
-                            className="select select-bordered w-full bg-pink-50 border-gray-800 focus:outline-none focus:border-[#FF85BB] p-3 rounded-xl text-sm text-gray-600"
+                            className="w-full bg-gray-50 border border-gray-200 focus:outline-none focus:border-[#021A54] p-3 rounded-xl text-sm text-gray-600"
                         >
                             <option value="">All Specializations</option>
                             {specializations.map((spec, index) => (
@@ -108,12 +140,11 @@ const DoctorsPage = () => {
                         </select>
                     </div>
 
-                    {/* ৩. ফি সর্টিং */}
                     <div className="w-full">
                         <select  
                             value={sortOrder} 
                             onChange={(e) => setSortOrder(e.target.value)}
-                            className="select select-bordered w-full bg-pink-50 border-green-200 focus:outline-none focus:border-[#FF85BB] p-3 rounded-xl text-sm text-gray-600"
+                            className="w-full bg-gray-50 border border-gray-200 focus:outline-none focus:border-[#021A54] p-3 rounded-xl text-sm text-gray-600"
                         >
                             <option value="">Sort By Fees (Default)</option>
                             <option value="lowToHigh">Fee: Low to High</option>
@@ -122,82 +153,178 @@ const DoctorsPage = () => {
                     </div>
                 </div>
 
-                {/* 🔄 রিসেট ফিল্টার বাটন (ইনপুটগুলোর ঠিক নিচে ডান পাশে থাকবে) */}
-               <div className="flex justify-end">
-    <button
-        onClick={handleReset}
-        className="font-bold text-xs px-6 py-2.5 rounded-xl border transition-all duration-300 shadow-sm active:scale-95 text-[#FF85BB] border-[#FF85BB] bg-transparent hover:opacity-80"
-    >
-        🔄 Reset Filters
-    </button>
-</div>
+                {/* Action Control Bar */}
+                <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${viewMode === 'grid' ? 'bg-[#021A54] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            📱 Card Grid
+                        </button>
+                        <button
+                            onClick={() => setViewMode('table')}
+                            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${viewMode === 'table' ? 'bg-[#021A54] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                        >
+                            📊 Table List
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={handleReset}
+                        className="font-bold text-xs px-5 py-2 rounded-xl border border-gray-200 transition-all duration-300 shadow-sm active:scale-95 text-gray-500 bg-transparent hover:bg-gray-50"
+                    >
+                        🔄 Reset Filters
+                    </button>
+                </div>
             </div>
 
-            {/* 🗂️ কার্ড গ্রিড লেআউট */}
+            {/* Main Content Render Layout */}
             {loading ? (
                 <div className="flex justify-center items-center py-20">
                     <div className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#021A54', borderTopColor: 'transparent' }}></div>
                 </div>
             ) : doctors.length === 0 ? (
-                <div className="text-center py-12">
-                    <p className="text-lg font-semibold text-gray-500">No doctors found matching your criteria.</p>
+                <div className="text-center py-12 bg-white max-w-7xl mx-auto rounded-3xl border border-none shadow-sm">
+                    <p className="text-sm font-bold text-gray-400">No doctors found matching your criteria.</p>
                 </div>
-            ) : (
-                <div className="max-w-7xl  mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            ) : viewMode === 'grid' ? (
+                /* 🗂️ GRID/CARD MODE LAYOUT */
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {doctors.map((doctor) => {
                         const doctorId = doctor._id?.$oid || doctor._id;
+                        const isPending = doctor.verificationStatus?.toLowerCase() === "pending";
+
                         return (
                             <div 
                                 key={doctorId} 
-                                className="bg-white rounded-2xl border border-[#fcc6de] shadow-sm hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300 overflow-hidden flex flex-col justify-between group"
-                            >
-                                <div className="p-6 flex flex-col items-center text-center">
-                                    <div className="overflow-hidden rounded-2xl  w-64 h-40 border-2 shadow-sm relative mb-4" style={{ borderColor: '#FFCEE3' }}>
+                                className={`bg-white rounded-3xl border border-[#2652b8]/30 hover:border-[#FF85BB] shadow-[0_10px_25px_rgba(2,26,84,0.15)] hover:shadow-[0_20px_35px_rgba(38,82,184,0.3)] hover:-translate-y-2 transform transition-all duration-300 overflow-hidden flex flex-col justify-between group ${isPending ? 'opacity-75' : ''}`}>
+                                 <div className="p-6 flex flex-col items-center text-center">
+                                    <div className="overflow-hidden rounded-2xl w-full h-44 relative mb-4 bg-gray-50 border border-gray-100">
                                         <Image 
                                             src={doctor.profileImage || "https://via.placeholder.com/150"} 
                                             alt={doctor.doctorName || "Doctor"} 
                                             fill 
-                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                            sizes="112px"
+                                            className="object-cover group-hover:scale-102 transition-transform duration-300"
+                                            sizes="(max-w-768px) 100vw, 33vw"
                                         />
                                     </div>
 
                                     <div className="flex items-center gap-1.5 justify-center mb-1">
-                                        <h3 className="font-bold text-lg" style={{ color: '#021A54' }}>
+                                        <h3 className="font-extrabold text-lg text-[#021A54] group-hover:text-[#FF85BB] transition-colors duration-300">
                                             {doctor.doctorName}
                                         </h3>
                                         {doctor.verificationStatus === "Verified" && (
-                                            <span className="flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-white shadow-sm" style={{ backgroundColor: '#FF85BB' }} title="Verified">✓</span>
+                                            <span className="flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black text-white bg-green-500 shadow-sm" title="Verified">✓</span>
+                                        )}
+                                        {isPending && (
+                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Pending</span>
                                         )}
                                     </div>
 
-                                    <span className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4" style={{ backgroundColor: '#FFCEE3', color: '#021A54' }}>
+                                    <span className="text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-4 bg-blue-50 text-[#021A54]">
                                         {doctor.specialization}
                                     </span>
 
-                                    <div className="space-y-1 text-sm text-gray-500 w-full border-t border-gray-50 pt-3">
-                                        <p className="truncate">🏢 {doctor.hospitalName}</p>
+                                    <div className="space-y-1 text-xs font-medium text-gray-400 w-full border-t border-gray-100 pt-3">
+                                        <p className="truncate text-gray-500">🏢 {doctor.hospitalName}</p>
                                         <p>⏱️ {doctor.experience} Years Experience</p>
                                     </div>
                                 </div>
 
-                                <div className="p-4 border-t border-gray-50 flex items-center justify-between bg-gray-50 bg-opacity-60">
+                                <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50 group-hover:bg-pink-50/20 transition-colors duration-300">
                                     <div>
                                         <p className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">Fee</p>
-                                        <p className="text-xl font-black" style={{ color: '#021A54' }}>৳ {doctor.consultationFee}</p>
+                                        <p className="text-lg font-black text-[#021A54]">৳ {doctor.consultationFee}</p>
                                     </div>
                                     
-<Link
-    href={`/doctors/${doctorId}`} // এখানে doctorsId এর বদলে doctorId হবে
-    className="text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95" 
-    style={{ backgroundColor: '#FF85BB' }}
->
-    Book Doctor
-</Link>
+                                    <button
+                                        onClick={() => handleBookingClick(doctor, doctorId)}
+                                        className="text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95 bg-[#021A54] group-hover:bg-[#FF85BB] hover:opacity-90 cursor-pointer" 
+                                    >
+                                        Book Doctor
+                                    </button>
                                 </div>
                             </div>
                         );
                     })}
+                </div>
+            ) : (
+                /* 📊 TABULAR VIEW MODE LAYOUT (এখানে ট্যাগ এরর ঠিক করা হয়েছে 🎯) */
+                <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-sm border border-[#021A54]/10 overflow-hidden">
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-100">
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider pl-6">Doctor</th>
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider">Specialization</th>
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider">Hospital</th>
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider">Experience</th>
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider">Consultation Fee</th>
+                                    <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-wider text-right pr-6">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50 text-sm font-medium text-gray-600">
+                                {doctors.map((doctor) => {
+                                    const doctorId = doctor._id?.$oid || doctor._id;
+                                    const isPending = doctor.verificationStatus?.toLowerCase() === "pending";
+
+                                    return (
+                                        <tr key={doctorId} className={`hover:bg-pink-50/10 transition-colors group ${isPending ? 'opacity-70 bg-amber-50/10' : ''}`}>
+                                            <td className="p-4 pl-6 flex items-center gap-3">
+                                                <div className="w-10 h-10 relative rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                                    <Image 
+                                                        src={doctor.profileImage || "https://via.placeholder.com/150"}
+                                                        alt={doctor.doctorName || "Doctor"}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-[#021A54] group-hover:text-[#FF85BB] transition-colors duration-300 flex items-center gap-1.5">
+                                                        {doctor.doctorName}
+                                                        {doctor.verificationStatus === "Verified" && (
+                                                            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px] font-black text-white bg-green-500" title="Verified">✓</span>
+                                                        )}
+                                                        {isPending && (
+                                                            <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-100 text-amber-700">Pending</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                            <td className="p-4">
+                                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-[#021A54] uppercase tracking-wider">
+                                                    {doctor.specialization}
+                                                </span>
+                                            </td>
+
+                                            <td className="p-4 text-gray-500 max-w-[200px] truncate">
+                                                🏢 {doctor.hospitalName}
+                                            </td>
+
+                                            <td className="p-4 text-gray-400">
+                                                {doctor.experience} Years
+                                            </td>
+
+                                            <td className="p-4 font-extrabold text-[#021A54]">
+                                                ৳ {doctor.consultationFee}
+                                            </td>
+
+                                            <td className="p-4 text-right pr-6">
+                                                <button
+                                                    onClick={() => handleBookingClick(doctor, doctorId)}
+                                                    className="inline-block text-white font-bold text-xs px-4 py-2 rounded-xl transition-all bg-[#021A54] group-hover:bg-[#FF85BB] active:scale-95 shadow-sm cursor-pointer"
+                                                >
+                                                    Book Slot 📅
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

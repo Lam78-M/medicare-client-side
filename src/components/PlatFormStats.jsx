@@ -11,13 +11,11 @@ export default function PlatformStats() {
 
   return (
     <section className="container mx-auto rounded-2xl bg-[#021A54] py-20 text-white relative overflow-hidden mt-30 mb-30">
-      {/* গ্লো ইফেক্ট */}
       <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-[#FF85BB]/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
-          {/* বাম কলাম: বড় টেক্সট এবং বুলেট লিস্ট */}
           <motion.div 
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -33,7 +31,6 @@ export default function PlatformStats() {
               MediCare Connect is not just an app; it is a comprehensive smart medical network designed to keep professional medical help right in your pocket.
             </p>
 
-            {/* পয়েন্ট লিস্ট */}
             <div className="space-y-4 pt-4">
               {points.map((point, index) => (
                 <div key={index} className="flex items-start gap-3">
@@ -44,7 +41,6 @@ export default function PlatformStats() {
             </div>
           </motion.div>
 
-          {/* ডান কলাম: বড় এবং বোল্ড স্ট্যাটিস্টিক্স গ্রিড */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}

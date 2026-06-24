@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // 🚀 রাউটার ইম্পোর্ট করা হলো
+import { useRouter } from "next/navigation"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { User, Mail, Lock, Image as ImageIcon, Cast, ArrowRight } from "lucide-react";
@@ -11,7 +11,7 @@ import { authClient } from "@/lib/auth-client";
 import { FaGoogle } from "react-icons/fa";
 
 export default function SignUpPage() {
-  const router = useRouter(); // 🚀 রাউটার ইনিশিয়েলাইজেশন
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -20,14 +20,11 @@ export default function SignUpPage() {
   });
 
   const [loading, setLoading] = useState(false);
-  // 🔥 ডাটাবেজের সাথে বানান ঠিক রাখতে ডিফল্ট ভ্যালু 'patient' রাখলাম, আর ডক্টর সিলেক্ট করলে 'doctors' যাবে
   const [role, setRole] = useState('patient'); 
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // কাস্টম টোস্ট স্টাইল
   const showToast = (message, type = "success") => {
     toast[type](message, {
       position: "top-right",
@@ -45,7 +42,6 @@ export default function SignUpPage() {
     });
   };
 
-  // 📧 Better Auth ইমেইল রেজিস্ট্রেশন
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -59,14 +55,12 @@ export default function SignUpPage() {
     }
 
     try {
-      // 🔥 লক্ষ করো বন্ধু: callbackURL কেটে দিয়েছি যাতে Better Auth জোর করে হোমে না পাঠায়।
-      // আমরা নিজেরা নিচে রোল চেক করে সঠিক ড্যাশবোর্ডে পাঠাবো।
       const { data, error: authError } = await authClient.signUp.email({
         email: email,
         password: password,
         name: name,
         image: photoUrl || undefined,
-        role: role, // 'patient', 'doctors' অথবা 'admin' পাস হবে
+        role: role, 
       });
 
       if (authError) {
@@ -76,15 +70,13 @@ export default function SignUpPage() {
 
       showToast("Account created successfully! Redirecting to dashboard... ✨");
       
-      // ⚡ ওস্তাদ ট্রিক: সাইন-আপ ডেটা থেকে রোল চেক করে সঠিক ড্যাশবোর্ডে পাঠানো
-      // যদি data.user.role না পাও, তবে সরাসরি আমাদের লোকাল 'role' স্টেট ব্যবহার করলেই কাজ হয়ে যাবে!
       const userRole = data?.user?.role || role;
        localStorage.setItem("user_role", role)
       setTimeout(() => {
         if (userRole === "admin") {
           router.push("/dashboard/admin");
         } else if (userRole === "doctors") {
-          router.push("/dashboard/doctors"); // ফোল্ডার স্ট্রাকচার /dashboard/doctor হলে
+          router.push("/dashboard/doctors"); 
         } else {
           router.push("/dashboard/patient");
         }
@@ -98,8 +90,6 @@ export default function SignUpPage() {
     }
   };
 
-  // 🌐 Better Auth গুগল সোশ্যাল লগইন
-
   const handleGoogleSignIn = async () =>{
     await authClient.signIn.social({
       provider: "google",
@@ -109,7 +99,7 @@ export default function SignUpPage() {
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      {/* গ্লসি ব্যাকগ্রাউন্ড আর্ট */}
+     
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#FFCEE3]/40 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#FF85BB]/15 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -129,7 +119,7 @@ export default function SignUpPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* নাম */}
+     
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Full Name</label>
             <div className="relative">
@@ -145,7 +135,6 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* ইমেইল */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Email Address</label>
             <div className="relative">
@@ -161,7 +150,6 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* ফটো ইউআরএল */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Photo URL (Optional)</label>
             <div className="relative">
@@ -177,7 +165,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* পাসওয়ার্ড */}
+    
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Password</label>
             <div className="relative">
@@ -193,8 +181,6 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* role based name */}
-          {/* role based name */}
 <div className="flex flex-col gap-2">
   <Label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1 pb-2">
     Subscription Plan
@@ -254,7 +240,6 @@ export default function SignUpPage() {
           </span>
         </div>
 
-        {/* 🌐 গুগল সাইন ইন বাটন */}
         <motion.button onClick={handleGoogleSignIn}
           whileHover={{ y: -2, borderColor: "#FF85BB", backgroundColor: "rgba(255,206,227,0.1)" }}
           whileTap={{ scale: 0.98 }}

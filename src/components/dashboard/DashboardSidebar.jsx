@@ -13,20 +13,19 @@ import {
 
 import { Button, Drawer } from "@heroui/react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client"; // 🚀 Better Auth import
+import { authClient } from "@/lib/auth-client"; 
 
 export function DashboardSidebar() {
-  const [userRole, setUserRole] = useState("patient"); // Default 'patient' role
+  const [userRole, setUserRole] = useState("patient"); // Default patient role
   const [userName, setUserName] = useState("User");
 
-  // 📡 Better Auth theke dynamic logged-in user er information ber kora
+  //  Better auths dynamic login
 useEffect(() => {
   const fetchSession = async () => {
-    // Prothome local storage check korbo, na paile better auth session nibe
+  
     const savedRole = localStorage.getItem("user_role");
-    
     if (savedRole) {
-      setUserRole(savedRole); // Dynamic direct setup
+      setUserRole(savedRole); 
     } else {
       const session = await authClient.getSession();
       if (session?.data?.user?.role) {
@@ -38,9 +37,8 @@ useEffect(() => {
   fetchSession();
 }, []);
 
-  // 🛠️ ROLE ONUSHARE ALADA ALADA DASHBOARD LINKS (Assignment Criteria Complete)
   const menuConfig = {
-    // 🧑‍ Patients Menu 
+    // ‍atients Menu--------------- 
     patient: [
       { icon: House, label: "Overview", href: "/dashboard/patient" },
       { icon: Magnifier, label: "My Appointments", href: "/dashboard/patient/myAppointInfo" },
@@ -48,7 +46,7 @@ useEffect(() => {
       { icon: Envelope, label: "FeedBack Reviews", href: "/dashboard/patient/reviews" },
       { icon: Person, label: "My Profile", href: "/dashboard/patient/myProfile" },
     ],
-    // 🩺 Doctors Menu (Database standard capitalization)
+    // Doctors Menu----------------  
     doctors: [
       { icon: House, label: "Overview", href: "/dashboard/doctors" },
       { icon: LayoutSideContentLeft, label: "Manage Schedule & Days", href: "/dashboard/doctors/doctorTimeManage" },
@@ -56,22 +54,21 @@ useEffect(() => {
       { icon: Envelope, label: "Prescription Care", href: "/dashboard/doctors/patientsPrescription" },
       { icon: Person, label: "Profile Settings", href: "/dashboard/doctors/doctorProfile" },
     ],
-    // 👑 Admin Menu
+    //  Admin Menu----------------- 
     admin: [
       { icon: House, label: "Overview Admin", href: "/dashboard/admin" },
-      { icon: Person, label: "Manage Users", href: "/dashboard/admin/users" },
-      { icon: LayoutSideContentLeft, label: "Manage Doctors", href: "/dashboard/admin/doctors" },
+      { icon: Person, label: "Manage Users", href: "/dashboard/admin/userManage" },
+      { icon: LayoutSideContentLeft, label: "Manage Doctors", href: "/dashboard/admin/manageDoctors" },
       { icon: Magnifier, label: "Manage Appointments", href: "/dashboard/admin/appointments" },
       { icon: Bell, label: "Payment Management", href: "/dashboard/admin/payments" },
     ],
   };
 
-  // Roll meshano dynamic filter array mapping target pointer
+  // Roll and dynamic filter array mapping target pointer
   const navItems = menuConfig[userRole] || menuConfig.patient;
 
   const navContent = (
     <div className="flex h-full flex-col">
-      {/* Logo */}
       <div className="mb-8 flex items-center gap-3 px-2">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FF85BB] text-lg font-bold text-white shadow-sm">
           ❤️
@@ -88,7 +85,6 @@ useEffect(() => {
       {/* Navigation Matrix */}
       <nav className="flex flex-col gap-2">
         {navItems.map((item, index) => (
-          // 🚀 Button element swap kore standard Next link banano holo design drop chara
           <Link
             key={item.label}
             href={item.href || "#"}
@@ -133,19 +129,17 @@ useEffect(() => {
 
   return (
     <>
-      {/* Desktop Sidebar (Tomar original grid layer wrapper strictly optimized) */}
       <aside className="hidden lg:flex flex-col w-72 min-h-screen border-r rounded-2xl bg-[#021A54] text-white border-white/10 p-4">
         {navContent}
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer-------------- */}
       <div className="lg:hidden p-3">
         <Drawer>
           <Button variant="flat" className="bg-[#021A54] text-white font-semibold">
             <LayoutSideContentLeft />
             Open Menu
           </Button>
-
           <Drawer.Backdrop>
             <Drawer.Content placement="left" className="bg-[#021A54] text-white p-0">
               <Drawer.Dialog className="bg-[#021A54] border-0 h-full">
@@ -156,7 +150,6 @@ useEffect(() => {
                     MediCare Control Hub
                   </Drawer.Heading>
                 </Drawer.Header>
-
                 <Drawer.Body className="p-4 bg-[#021A54]">
                   {navContent}
                 </Drawer.Body>

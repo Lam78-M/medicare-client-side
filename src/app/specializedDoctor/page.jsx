@@ -9,7 +9,7 @@ export const metadata = {
 export default function SpecializationsPage() {
   return (
     <main className="min-h-screen bg-[#F5F5F5]">
-      {/* পেজের ওপরে একটি প্রিমিয়াম হেডার সেকশন */}
+
       <div className="bg-[#021A54] text-white py-16 px-6 text-center border-b border-white/10 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full bg-[#FF85BB]/5 blur-3xl pointer-events-none"></div>
         
@@ -26,7 +26,7 @@ export default function SpecializationsPage() {
         </div>
       </div>
 
-      {/* আমাদের সেই জোস ফ্রেমর মোশন কম্পোনেন্টটি এখানে রেন্ডার হবে */}
+
       <div className="py-8">
         <Specializations></Specializations>
       </div>

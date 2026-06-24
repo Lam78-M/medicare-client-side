@@ -44,7 +44,6 @@ export default function WhyChooseUs() {
     <section className="bg-white py-20 border-b border-slate-100 pb-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* সেকশন হেডার */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-[#FF85BB] font-extrabold tracking-widest text-xs uppercase bg-[#FFCEE3]/30 px-4 py-1.5 rounded-full">
             Platform Advantages
@@ -57,7 +56,6 @@ export default function WhyChooseUs() {
           </p>
         </div>
 
-        {/* বেনিফিট কার্ড গ্রিড */}
         <motion.div 
           variants={containerVariants}
           initial="hidden"

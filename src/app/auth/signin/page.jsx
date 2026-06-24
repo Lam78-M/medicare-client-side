@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth-client";
 import { FaGoogle } from "react-icons/fa";
 
 export default function SignInPage() {
-  const router = useRouter(); // 🚀 রাউটার ইনিশিয়েলাইজেশন
+  const router = useRouter(); 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,7 +22,6 @@ export default function SignInPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // কাস্টম থিম টোস্ট
   const showToast = (message, type = "success") => {
     toast[type](message, {
       position: "top-right",
@@ -40,7 +39,6 @@ export default function SignInPage() {
     });
   };
 
-  // 📧 Better Auth ইমেইল সাইন-ইন
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -54,7 +52,6 @@ export default function SignInPage() {
     }
 
     try {
-      // 🚀 Better Auth সাইন-ইন কল (callbackURL কমানো হলো যাতে ড্যাশবোর্ড লজিক কাজ করে)
       const { data, error: authError } = await authClient.signIn.email({
         email: email,
         password: password,
@@ -67,8 +64,6 @@ export default function SignInPage() {
 
       showToast("Welcome back! Redirecting to dashboard... 🚀");
       
-      // 🔥 ওস্তাদ ট্রিক: Better Auth সেশন থেকে রোল বের করা
-      // ডাটাবেজে যদি রোল 'patient', 'doctors' বা 'admin' থাকে, সেটা লোকাল স্টোরেজে সেভ হবে
       const loggedInRole = data?.user?.role || "patient"; 
       localStorage.setItem("user_role", loggedInRole);
 
@@ -102,7 +97,7 @@ export default function SignInPage() {
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-      {/* ব্যাকগ্রাউন্ড গ্লসি আর্ট */}
+  
       <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#FFCEE3]/40 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#FF85BB]/15 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -122,7 +117,7 @@ export default function SignInPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* ইমেইল */}
+       
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Email Address</label>
             <div className="relative">
@@ -138,7 +133,7 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {/* পাসওয়ার্ড */}
+       
           <div className="space-y-1.5">
             <div className="flex justify-between items-center px-1">
               <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80">Password</label>
@@ -178,7 +173,6 @@ export default function SignInPage() {
           </span>
         </div>
 
-        {/* 🌐 গুগল লগইন বাটন */}
         <motion.button
           whileHover={{ y: -2, borderColor: "#FF85BB", backgroundColor: "rgba(255,206,227,0.1)" }}
           whileTap={{ scale: 0.98 }}

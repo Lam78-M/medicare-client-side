@@ -9,7 +9,6 @@ export default function ContactUs() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Front-end notification state placeholder
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -19,8 +18,7 @@ export default function ContactUs() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] py-16 px-4 md:px-10">
-      <div className="max-w-5xl mx-auto">
-        
+      <div className="max-w-5xl mx-auto">  
         {/* Page Top Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-[#021A54] mb-3">Get In Touch</h1>
@@ -31,7 +29,6 @@ export default function ContactUs() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Column 1: Contact Direct Information Cards */}
           <div className="md:col-span-1 space-y-4">
             
             <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
@@ -55,7 +52,6 @@ export default function ContactUs() {
 
           </div>
 
-          {/* Column 2: Dynamic Animated Form (Framer Motion Integration) */}
           <motion.div 
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}

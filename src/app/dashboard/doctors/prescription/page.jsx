@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify"; 
+// 🟢 Better Auth ক্লায়েন্ট হেল্পার
+import { authClient } from "@/lib/auth-client"; 
 
 function PrescriptionContent() {
     const searchParams = useSearchParams();
@@ -9,23 +12,27 @@ function PrescriptionContent() {
     const urlAppId = searchParams.get("appId") || "";
     const nameFromUrl = searchParams.get("patientName") || "Unknown Patient";
 
-    // ইনপুট স্টেটসমূহ
     const [symptoms, setSymptoms] = useState("");
     const [medicines, setMedicines] = useState("");
     const [advice, setAdvice] = useState("");
     
-    // 🎯 এডিট মোড ট্র্যাক করার জন্য একটি ডায়নামিক আইডি স্টেট
+    const [selectedPatientName, setSelectedPatientName] = useState("");
     const [activeAppointmentId, setActiveAppointmentId] = useState("");
     const [prescriptionsList, setPrescriptionsList] = useState([]);
 
-    // ইউআরএল থেকে ফার্স্ট টাইমে আইডি সেট করা
+    // 🟢 Better Auth থেকে কারেন্ট ডক্টর সেশন রিড করা
+    const { data: session } = authClient.useSession();
+    const doctorEmail = session?.user?.email;
+
     useEffect(() => {
         if (urlAppId) {
             setActiveAppointmentId(urlAppId);
         }
-    }, [urlAppId]);
+        if (nameFromUrl) {
+            setSelectedPatientName(nameFromUrl);
+        }
+    }, [urlAppId, nameFromUrl]);
 
-    // 🔄 MongoDB Atlas থেকে ডাটা লোড করা
     const fetchPrescriptions = async () => {
         try {
             const response = await fetch("http://localhost:5000/api/prescriptions/all");
@@ -34,18 +41,19 @@ function PrescriptionContent() {
             if (Array.isArray(data)) {
                 setPrescriptionsList(data);
 
-                // ইনিশিয়াল লোডে যদি ইউআরএল এর আইডি ডাটাবেজে থাকে তবে ফর্মে বসবে
                 if (urlAppId) {
                     const existing = data.find((p) => p.appointmentId === urlAppId);
                     if (existing) {
                         setSymptoms(existing.symptoms || "");
                         setMedicines(existing.medicines || "");
                         setAdvice(existing.advice || "");
+                        setSelectedPatientName(existing.patientName || nameFromUrl);
                     }
                 }
             }
         } catch (error) {
             console.error("❌ Error fetching from MongoDB:", error);
+            toast.error("Failed to fetch prescriptions! 📋"); 
         }
     };
 
@@ -53,24 +61,25 @@ function PrescriptionContent() {
         fetchPrescriptions();
     }, [urlAppId]);
 
-    // ফর্ম সাবমিট হ্যান্ডলার
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // আইডি চেক: একটিভ আইডি থাকলে সেটা যাবে, না থাকলে নতুন অটো আইডি জেনারেট হবে
-        const finalAppointmentId = activeAppointmentId || `AUTO-${Date.now()}`;
+        // যদি ইউজার হিস্ট্রি কার্ডে ক্লিক করে তবে activeAppointmentId চেঞ্জ হবে, অন্যথায় URL-এর আইডি থাকবে
+        const finalAppointmentId = activeAppointmentId || urlAppId || `AUTO-${Date.now()}`;
 
         const prescriptionData = {
             appointmentId: finalAppointmentId,
-            patientName: nameFromUrl, 
+            patientName: selectedPatientName, 
+            doctorEmail: doctorEmail?.trim().toLowerCase() || "", 
             symptoms: symptoms,
             medicines: medicines,
             advice: advice,
         };
 
-        console.log("🚀 Saving/Updating Data:", prescriptionData);
+        console.log("🚀 Syncing with Backend (Upsert Mode):", prescriptionData);
 
         try {
+            // 🎯 তোমার ব্যাকএন্ডের সিঙ্গেল রুট যা একইসাথে সেভ এবং এডিট হ্যান্ডেল করতে পারে!
             const response = await fetch("http://localhost:5000/api/prescriptions/save", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -80,30 +89,43 @@ function PrescriptionContent() {
             const result = await response.json();
             console.log("📥 Server Response:", result);
 
-            if (result.success) {
-                alert("🎉 Prescription Saved & Updated successfully!");
+            if (result.success || response.ok) {
+                toast.success("📋 Prescription Synchronized successfully! 🎉");
                 
-                // ফর্ম রিসেট
+                // ফর্ম রিসেট করে আবার ডিফল্ট URL মুডে নিয়ে যাওয়া
                 setSymptoms("");
                 setMedicines("");
                 setAdvice("");
-                setActiveAppointmentId(urlAppId); // আবার ডিফল্ট ইউআরএল আইডিতে ব্যাক করা
+                setActiveAppointmentId(urlAppId); 
+                setSelectedPatientName(nameFromUrl);
                 
-                // লাইভ রিফ্রেশ
+                // লাইভ হিস্ট্রি ডাটা রিফ্রেশ করা
                 fetchPrescriptions();
             } else {
-                alert(`⚠️ Error: ${result.message}`);
+                toast.error(`⚠️ Error: ${result.message || "Failed to sync"}`);
             }
         } catch (error) {
             console.error("❌ Request Error:", error);
-            alert("Backend server connection failed! 🌐");
+            toast.error("Backend server connection failed! 🌐");
         }
     };
+
+    // 🛑 STRICTOR FILTERING MATRIX
+    const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
+    
+    const myFilteredPrescriptions = prescriptionsList.filter((pres) => {
+        if (!pres) return false;
+        const presDoctorEmail = pres.doctorEmail || pres.doctor_email;
+        if (presDoctorEmail && currentDoctorEmail) {
+            return presDoctorEmail.trim().toLowerCase() === currentDoctorEmail;
+        }
+        return pres.patientName === nameFromUrl;
+    });
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* 📋 বাম পাশে: প্রেসক্রিপশন ফর্ম */}
+            {/* Left side: Form */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-fit">
                 <h2 className="text-xl font-bold text-[#021A54] mb-2">Prescription Form (MongoDB Client)</h2>
                 <div className="mb-4">
@@ -116,7 +138,7 @@ function PrescriptionContent() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="text-xs font-black text-gray-400 uppercase block mb-1">Patient Name</label>
-                        <input type="text" value={nameFromUrl} disabled className="w-full bg-gray-100 text-gray-600 font-extrabold p-3 rounded-xl border border-gray-200 text-sm cursor-not-allowed"/>
+                        <input type="text" value={selectedPatientName} disabled className="w-full bg-gray-100 text-gray-600 font-extrabold p-3 rounded-xl border border-gray-200 text-sm cursor-not-allowed"/>
                     </div>
 
                     <div>
@@ -134,36 +156,36 @@ function PrescriptionContent() {
                         <input type="text" value={advice} onChange={(e) => setAdvice(e.target.value)} placeholder="e.g., Rest well" className="w-full bg-gray-50 text-gray-800 p-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-400 transition-all" />
                     </div>
 
-                    <button type="submit" className="w-full bg-[#021A54] hover:bg-blue-900 text-white font-bold p-3.5 rounded-xl text-sm transition-all shadow-sm cursor-pointer">
+                    <button type="submit" className={`w-full text-white font-bold p-3.5 rounded-xl text-sm transition-all shadow-sm cursor-pointer ${activeAppointmentId === urlAppId ? 'bg-[#021A54] hover:bg-blue-900' : 'bg-amber-600 hover:bg-amber-700'}`}>
                         {activeAppointmentId === urlAppId ? "Submit & Save to MongoDB ✅" : "Update Existing Prescription 🔄"}
                     </button>
                     
                     {activeAppointmentId !== urlAppId && (
-                        <button type="button" onClick={() => { setSymptoms(""); setMedicines(""); setAdvice(""); setActiveAppointmentId(urlAppId); }} className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold p-2 rounded-xl text-xs transition-all">
+                        <button type="button" onClick={() => { setSymptoms(""); setMedicines(""); setAdvice(""); setActiveAppointmentId(urlAppId); setSelectedPatientName(nameFromUrl); }} className="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold p-2 rounded-xl text-xs transition-all">
                             Cancel Edit ❌
                         </button>
                     )}
                 </form>
             </div>
 
-            {/* 🗂️ ডান পাশে: লাইভ হিস্ট্রি */}
+            {/* Right side: Data history */}
             <div className="space-y-4">
-                <h2 className="text-xl font-bold text-[#021A54] mb-2">Prescription History ({prescriptionsList.length})</h2>
+                <h2 className="text-xl font-bold text-[#021A54] mb-2">Prescription History ({myFilteredPrescriptions.length})</h2>
                 
-                {prescriptionsList.length === 0 ? (
+                {myFilteredPrescriptions.length === 0 ? (
                     <div className="bg-white p-12 text-center text-gray-400 font-bold rounded-3xl border border-dashed border-gray-200">
-                        No prescriptions saved in MongoDB yet.
+                        No prescriptions saved for this doctor yet.
                     </div>
                 ) : (
-                    prescriptionsList.map((pres) => (
+                    myFilteredPrescriptions.map((pres) => (
                         <div 
                             key={pres._id} 
                             onClick={() => {
-                                // 🎯 কার্ডে ক্লিক করলে ডাটা এবং অরিজিনাল আইডি দুটোই সেট হবে!
                                 setSymptoms(pres.symptoms || "");
                                 setMedicines(pres.medicines || "");
                                 setAdvice(pres.advice || "");
                                 setActiveAppointmentId(pres.appointmentId);
+                                setSelectedPatientName(pres.patientName || "Unknown Patient");
                                 console.log("✏️ Loaded for edit. Appointment ID:", pres.appointmentId);
                             }}
                             className={`bg-white p-5 rounded-3xl shadow-sm border transition-all duration-300 relative overflow-hidden cursor-pointer group ${activeAppointmentId === pres.appointmentId ? 'border-amber-400 ring-2 ring-amber-100' : 'border-gray-100 hover:border-blue-300 hover:shadow-md'}`}
@@ -173,9 +195,9 @@ function PrescriptionContent() {
                             <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <h3 className="font-black text-lg text-[#021A54] group-hover:text-blue-800 transition-colors">{pres.patientName}</h3>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {pres.appointmentId} | Issued: {pres.date}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {pres.appointmentId}</p>
                                 </div>
-                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full transition-all ${activeAppointmentId === pres.appointmentId ? 'bg-amber-100 text-amber-800' : 'bg-green-50 text-green-700 group-hover:bg-blue-50 group-hover:text-blue-700'}`}>
+                                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full transition-all ${activeAppointmentId === pres.appointmentId ? 'bg-amber-100 text-amber-800' : 'bg-green-50 text-green-700'}`}>
                                     {activeAppointmentId === pres.appointmentId ? "Editing... ✏️" : "Click to Edit ✏️"}
                                 </span>
                             </div>
