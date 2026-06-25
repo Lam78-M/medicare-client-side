@@ -241,68 +241,93 @@ const DoctorDetailPage = () => {
                         </div>
 
                         {/* Form Submission Execution */}
-                        <form 
-                             onSubmit={async (e) => {
-    e.preventDefault(); 
-    
-    if (!currentUser) {
-        toast.error("Please login first to book an appointment! 🔒");
-        return;
-    }
+                  {/* //// 📅 APPOINTMENT BOOKING FORM SYSTEM WITH STRIPE CHECKOUT */}
+<form 
+    onSubmit={async (e) => {
+        e.preventDefault(); 
+        
+        if (!currentUser) {
+            toast.error("Please login first to book an appointment! 🔒");
+            return;
+        }
 
-    // 🚨 100% BULLETPROOF ROLE CHECKING (Handles 'doctor', 'doctors', 'admin', 'admins')
-    const userRole = currentUser?.role ? currentUser.role.toLowerCase().trim() : '';
-    
-    if (userRole.includes('doctor') || userRole.includes('admin')) {
-        toast.error(`Booking Failed! Accounts with role "${currentUser.role}" are not permitted to book appointments. ❌`);
-        return; // এখানেই কোড এক্সিকিউশন স্টপ করে দেবে, ব্যাকএন্ডে রিকোয়েস্ট যাবেই না!
-    }
+        const userRole = currentUser?.role ? currentUser.role.toLowerCase().trim() : '';
+        if (userRole.includes('doctor') || userRole.includes('admin')) {
+            toast.error(`Booking Failed! Accounts with role "${currentUser.role}" are not permitted. ❌`);
+            return;
+        }
 
-    if (!selectedDate || !selectedSlot) {
-        toast.warning("Please complete schedule selection.");
-        return;
-    }
+        if (!selectedDate || !selectedSlot) {
+            toast.warning("Please complete schedule selection.");
+            return;
+        }
 
-                                const bookingData = {
-                                    doctorId: doctor._id,
-                                    doctorName: doctor.doctorName,
-                                    doctorEmail: doctor.doctorEmail || doctor.email, 
-                                    specialization: doctor.specialization,
-                                    hospitalName: doctor.hospitalName,
-                                    consultationFee: doctor.consultationFee,
-                                    appointmentDate: selectedDate, 
-                                    appointmentDay: selectedDay,   
-                                    appointmentTime: formatTime12Hour(selectedSlot), 
-                                    patientProblem: patientProblem, 
-                                    userEmail: currentUser.email,   
-                                    userName: currentUser.name || "Anonymous Patient",  
-                                    status: "Pending",             
-                                    createdAt: new Date()
-                                };
+        const bookingData = {
+            doctorId: doctor._id,
+            doctorName: doctor.doctorName,
+            doctorEmail: doctor.doctorEmail || doctor.email, 
+            specialization: doctor.specialization,
+            hospitalName: doctor.hospitalName,
+            consultationFee: doctor.consultationFee,
+            appointmentDate: selectedDate, 
+            appointmentDay: selectedDay,   
+            appointmentTime: formatTime12Hour(selectedSlot), 
+            patientProblem: patientProblem, 
+            userEmail: currentUser.email,   
+            userName: currentUser.name || "Anonymous Patient",  
+            status: "Pending",             
+            createdAt: new Date()
+        };
 
-                                setBookingLoading(true);
-                                try {
-                                    const response = await fetch('http://localhost:5000/api/appointments', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify(bookingData)
-                                    });
+        setBookingLoading(true);
+        try {
+            // STEP 1: Save appointment data inside your Database
+            const response = await fetch('http://localhost:5000/api/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
 
-                                    if (response.ok) {
-                                        toast.success("Appointment successfully booked! 🎉");
-                                        router.push('/dashboard/patient'); 
-                                    } else {
-                                        toast.error("Booking verification rejected by server.");
-                                    }
-                                } catch (error) {
-                                    console.error(error);
-                                    toast.error("API server communication failed.");
-                                } finally {
-                                    setBookingLoading(false);
-                                }
-                            }}
-                            className="space-y-6"
-                        >
+            const databaseResult = await response.json();
+
+            if (response.ok) {
+                toast.success("Appointment registered! Initializing Payment Gateway... 💳");
+                
+                // STEP 2: Request Stripe checkout payload setup from Next.js route
+                const stripeResponse = await fetch('/api/checkout_sessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        doctorName: doctor.doctorName,
+                        consultationFee: doctor.consultationFee,
+                        appointmentId: databaseResult._id || databaseResult.insertedId, // Use your DB record target reference
+                        userEmail: currentUser.email
+                    })
+                });
+
+                const stripeSessionData = await stripeResponse.json();
+
+                if (stripeResponse.ok && stripeSessionData.url) {
+                    // Redirect browser client directly onto secured hosted billing panel wrapper
+                    window.location.href = stripeSessionData.url;
+                } else {
+                    toast.error(stripeSessionData.error || "Failed to launch Stripe billing session.");
+                }
+            } else {
+                toast.error("Booking verification rejected by server.");
+            }
+        } catch (error) {
+            console.error("Payment pipeline error:", error);
+            toast.error("API server communication failed.");
+        } finally {
+            setBookingLoading(false);
+        }
+    }}
+    className="space-y-6"
+>
+
+
+
                             <div>
                                 <h3 className="text-md font-bold uppercase tracking-wider mb-3" style={{ color: '#021A54' }}>
                                     📝 3. Describe Your Problem / Symptoms

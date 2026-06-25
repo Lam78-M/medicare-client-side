@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Chip, Input, Spinner } from "@heroui/react"; 
-import { toast } from 'react-toastify'; 
+import { Button, Card, Chip, Input, Spinner, Alert } from "@heroui/react"; 
+import { toast, ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css';
 import { authClient } from "@/lib/auth-client"; 
 
 export default function AppointmentPage() {
@@ -28,7 +29,7 @@ export default function AppointmentPage() {
             })
             .catch((err) => {
                 console.error("Error fetching data:", err);
-                toast.error("Failed to load appointments! ❌"); 
+                toast.error("Failed to load clinical appointments! ❌"); 
                 setLoading(false);
             });
     };
@@ -43,24 +44,36 @@ export default function AppointmentPage() {
 
     const handleCancel = async (id) => {
         if (!id) return;
-        if (!confirm("আপনি কি নিশ্চিত যে অ্যাপয়েন্টমেন্টটি বাতিল করতে চান?")) return;
+        
+        if (!confirm("Are you sure you want to cancel this scheduled appointment session?")) return;
 
         try {
             const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
                 method: 'DELETE'
             });
             if (res.ok) {
-                toast.success("Appointment successfully canceled! 🛑"); 
+                // 🎉 Immediate dynamic Toast on successful cancellation
+                toast.success("Appointment successfully canceled! 🛑", {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "light",
+                }); 
+                
                 setAppointments(appointments.filter(app => {
                     const appId = app?._id?.$oid || app?._id;
                     return appId !== id;
                 }));
             } else {
-                toast.error("Failed to cancel appointment. ⚠️"); 
+                toast.error("Unable to process cancellation. Please try again. ⚠️"); 
             }
         } catch (error) {
             console.error("Cancel error:", error);
-            toast.error("Network error while canceling! 🌐");
+            toast.error("Network connectivity issue detected! 🌐");
         }
     };
 
@@ -95,20 +108,23 @@ export default function AppointmentPage() {
             });
 
             if (res.ok) {
-                toast.success("Rescheduled Successfully! 🗓️✨"); 
+                toast.success("Rescheduled Successfully! 🗓️✨", {
+                    position: "top-right",
+                    autoClose: 3000,
+                }); 
                 setIsModalOpen(false);
                 setActiveAppointment(null); 
                 if(session?.user?.email) fetchAppointments(session.user.email); 
             } else {
-                toast.error("Something went wrong while rescheduling. ⚠️"); 
+                toast.error("Failed to update slot. Session may be locked. ⚠️"); 
             }
         } catch (error) {
             console.error("Reschedule network issue:", error);
-            toast.error("Network error while updating schedule! 🌐");
+            toast.error("Network error while updating medical schedule! 🌐");
         }
     };
 
-    // স্ট্যাটাস ফিল্টার লজিক
+    // Filter Logics
     const filteredAppointments = appointments.filter((app) => {
         if (filterStatus === "approved") return app.status === "Approved";
         if (filterStatus === "pending") return app.status !== "Approved";
@@ -125,16 +141,24 @@ export default function AppointmentPage() {
 
     if (!session || !session.user) {
         return (
-            <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
-                <Card className="p-8 text-center font-bold text-red-500 bg-white rounded-3xl shadow-sm border-none">
-                    Access Denied. Please Login with Better Auth. 🔒
-                </Card>
+            <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5] p-4">
+                {/* Clean structural HeroUI Alert component for structural blockers */}
+                <Alert 
+                    variant="flat" 
+                    color="danger" 
+                    title="Access Denied" 
+                    description="Please login with Better Auth to view your secure clinical dashboard." 
+                    className="max-w-md rounded-2xl font-bold bg-white border-l-4 border-red-500 shadow-sm"
+                />
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-[#F5F5F5] py-10 px-4 sm:px-6 lg:px-8 w-full relative">
+            {/* Global toast container instance */}
+            <ToastContainer />
+
             <div className="max-w-5xl mx-auto">
                 
                 {/* Header Section */}
@@ -147,18 +171,20 @@ export default function AppointmentPage() {
                     </p>
                 </div>
 
-                {/* 🌟 Custom Tailwind Filter Tabs (রেন্ডার এরর গ্যারান্টিড ফিক্স!) */}
+                {/* Custom Tailwind Filter Tabs */}
                 <div className="flex justify-center mb-8">
                     <div className="bg-white rounded-2xl p-1.5 border border-gray-200 shadow-sm flex gap-1">
                         <button 
+                            type="button"
                             onClick={() => setFilterStatus("all")}
                             className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
                                 filterStatus === "all" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
                             }`}
                         >
-                            All ({appointments.length})
+                            All Sessions ({appointments.length})
                         </button>
                         <button 
+                            type="button"
                             onClick={() => setFilterStatus("approved")}
                             className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
                                 filterStatus === "approved" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
@@ -167,12 +193,13 @@ export default function AppointmentPage() {
                             Approved ({appointments.filter(a => a.status === 'Approved').length})
                         </button>
                         <button 
+                            type="button"
                             onClick={() => setFilterStatus("pending")}
                             className={`font-bold text-xs px-5 py-2.5 rounded-xl transition-all ${
                                 filterStatus === "pending" ? "bg-[#021A54] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
                             }`}
                         >
-                            Pending ({appointments.filter(a => a.status !== 'Approved').length})
+                            Pending Checkups ({appointments.filter(a => a.status !== 'Approved').length})
                         </button>
                     </div>
                 </div>
@@ -180,8 +207,8 @@ export default function AppointmentPage() {
                 {/* Appointments List */}
                 <div className="space-y-4">
                     {filteredAppointments.length === 0 ? (
-                        <Card className="p-12 text-center text-gray-400 font-bold bg-white rounded-3xl shadow-sm border-none">
-                            No {filterStatus !== 'all' ? filterStatus : ''} appointments found.
+                        <Card className="p-12 text-center text-gray-400 font-bold bg-white rounded-3xl shadow-sm border-none italic">
+                            No {filterStatus !== 'all' ? filterStatus : ''} medical records found for this account.
                         </Card>
                     ) : (
                         filteredAppointments.map((appointment, index) => {

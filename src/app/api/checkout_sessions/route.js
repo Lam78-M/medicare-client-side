@@ -1,27 +1,45 @@
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
+import { stripe } from '../../../lib/stripe' 
 
-import { stripe } from '../../../lib/stripe'
-
-export async function POST() {
+export async function POST(req) {
   try {
     const headersList = await headers()
     const origin = headersList.get('origin')
+    
+    const { doctorName, consultationFee, appointmentId, userEmail } = await req.json();
 
-    // Create Checkout Sessions from body params.
     const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      
       line_items: [
         {
-          // Provide the exact Price ID (for example, price_1234) of the product you want to sell
-          price: '{{PRICE_ID}}',
+          price_data: {
+            currency: 'bdt', 
+            product_data: {
+              name: `Consultation with ${doctorName}`,
+              description: `Appointment Payment Reference ID: ${appointmentId}`,
+            },
+            unit_amount: consultationFee * 100, 
+          },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/deshboard/patient/success?session_id={CHECKOUT_SESSION_ID}`,
+      
+      // 🚀 FIX: Comment out or remove this line to bypass "Confirm it's you" / Link login trigger
+      // customer_email: userEmail, 
+
+      metadata: {
+        appointmentId: appointmentId,
+      },
+      success_url: `${origin}/dashboard/patient?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/dashboard/patient?payment=cancelled`,
     });
-    return NextResponse.redirect(session.url, 303)
+
+    return NextResponse.json({ url: session.url });
   } catch (err) {
+    console.error("Stripe Session Error:", err);
     return NextResponse.json(      
       { error: err.message },
       { status: err.statusCode || 500 }

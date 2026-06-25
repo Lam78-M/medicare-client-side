@@ -74,66 +74,66 @@ export default function AppointmentPage() {
                 <div className="overflow-hidden shadow-xl rounded-2xl border border-[#FFCEE3] bg-white">
                     <div className="overflow-x-auto w-full scrollbar-thin">
                         <table className="min-w-full divide-y divide-[#FFCEE3] table-auto">
-                            
-                            {/* Table Header */}
-                            <thead className="bg-[#021A54] text-white">
-                                <tr>
-                                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Doctor Name</th>
-                                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Date & Day</th>
-                                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Time</th>
-                                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Fee</th>
-                                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Status</th>
-                                </tr>
-                            </thead>
-                            
-                            {/* Table Body */}
-                            <tbody className="bg-white divide-y divide-gray-100 text-gray-700 text-xs sm:text-sm">
-                                {appointments.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="py-12 text-center text-gray-400 font-medium">
-                                            No appointments found for this account.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    appointments.map((appointment, index) => {
-                                        if (!appointment) return null;
-                                        const currentId = appointment._id?.$oid || appointment._id || `row-${index}`;
-                                        
-                                        return (
-                                            <tr key={currentId} className="hover:bg-[#F5F5F5] transition-colors">
-                                                
-                                                {/* Doctor Name */}
-                                                <td className="py-4 px-4 sm:px-6 font-bold text-[#021A54] whitespace-nowrap">
-                                                    {appointment.doctorName}
-                                                </td>
-                                                
-                                                {/* Date & Day */}
-                                                <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
-                                                    <span className="block font-medium text-gray-800">{appointment.appointmentDate}</span>
-                                                    <span className="text-[10px] sm:text-xs text-gray-400">{appointment.appointmentDay}</span>
-                                                </td>
-                                                
-                                                {/* Time */}
-                                                <td className="py-4 px-4 sm:px-6 whitespace-nowrap font-medium text-gray-600">
-                                                    {appointment.appointmentTime}
-                                                </td>
-                                                
-                                                {/* Fee */}
-                                                <td className="py-4 px-4 sm:px-6 whitespace-nowrap font-bold text-[#021A54]">
-                                                    ৳{appointment.consultationFee}
-                                                </td>
-                                                
-                                                {/* Status Badge */}
-                                                <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold ${
-                                                        appointment.status === 'Approved' 
-                                                            ? 'bg-green-100 text-green-800' 
-                                                            : 'bg-[#FFCEE3] text-[#FF85BB]'
-                                                    }`}>
-                                                        <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
-                                                            appointment.status === 'Approved' ? 'bg-green-500' : 'bg-[#FF85BB]'
-                                                        }`}></span>
-                                                        {appointment.status || 'Pending'}
+            
+            {/* Table Header */}
+            <thead className="bg-[#021A54] text-white">
+                <tr>
+                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Doctor Name</th>
+                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Date & Day</th>
+                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Time</th>
+                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Fee</th>
+                    <th className="py-4 px-4 sm:px-6 text-left font-semibold uppercase text-[10px] sm:text-xs tracking-wider">Status</th>
+                </tr>
+            </thead>
+            
+            {/* Table Body */}
+            <tbody className="bg-white divide-y divide-gray-100 text-gray-700 text-xs sm:text-sm">
+                {appointments.length === 0 ? (
+                    <tr>
+                        <td colSpan="5" className="py-12 text-center text-gray-400 font-medium">
+                            No appointments found for this account.
+                        </td>
+                    </tr>
+                ) : (
+                    appointments.map((appointment, index) => {
+         if (!appointment) return null;
+         const currentId = appointment._id?.$oid || appointment._id || `row-${index}`;
+         
+         return (
+             <tr key={currentId} className="hover:bg-[#F5F5F5] transition-colors">
+                 
+                 {/* Doctor Name */}
+                 <td className="py-4 px-4 sm:px-6 font-bold text-[#021A54] whitespace-nowrap">
+                     {appointment.doctorName}
+                 </td>
+                 
+                 {/* Date & Day */}
+                 <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
+                     <span className="block font-medium text-gray-800">{appointment.appointmentDate}</span>
+                     <span className="text-[10px] sm:text-xs text-gray-400">{appointment.appointmentDay}</span>
+                 </td>
+                 
+                 {/* Time */}
+                 <td className="py-4 px-4 sm:px-6 whitespace-nowrap font-medium text-gray-600">
+                     {appointment.appointmentTime}
+                 </td>
+                 
+                 {/* Fee */}
+                 <td className="py-4 px-4 sm:px-6 whitespace-nowrap font-bold text-[#021A54]">
+                     ৳{appointment.consultationFee}
+                 </td>
+                 
+                 {/* Status Badge */}
+                 <td className="py-4 px-4 sm:px-6 whitespace-nowrap">
+                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold ${
+                         appointment.status === 'Approved' 
+                             ? 'bg-green-100 text-green-800' 
+                             : 'bg-[#FFCEE3] text-[#FF85BB]'
+                     }`}>
+                         <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${
+                             appointment.status === 'Approved' ? 'bg-green-500' : 'bg-[#FF85BB]'
+                         }`}></span>
+                         {appointment.status || 'Pending'}
                                                     </span>
                                                 </td>
                                             </tr>

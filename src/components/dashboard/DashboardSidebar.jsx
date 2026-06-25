@@ -42,7 +42,7 @@ useEffect(() => {
     patient: [
       { icon: House, label: "Overview", href: "/dashboard/patient" },
       { icon: Magnifier, label: "My Appointments", href: "/dashboard/patient/myAppointInfo" },
-      { icon: Bell, label: "Payments History", href: "/dashboard/patient/payments" },
+      { icon: Bell, label: "Payments History", href: "/dashboard/patient/paymentHistory" },
       { icon: Envelope, label: "FeedBack Reviews", href: "/dashboard/patient/reviews" },
       { icon: Person, label: "My Profile", href: "/dashboard/patient/myProfile" },
     ],
