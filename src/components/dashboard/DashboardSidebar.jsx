@@ -59,8 +59,8 @@ useEffect(() => {
       { icon: House, label: "Overview Admin", href: "/dashboard/admin" },
       { icon: Person, label: "Manage Users", href: "/dashboard/admin/userManage" },
       { icon: LayoutSideContentLeft, label: "Manage Doctors", href: "/dashboard/admin/manageDoctors" },
-      { icon: Magnifier, label: "Manage Appointments", href: "/dashboard/admin/appointments" },
-      { icon: Bell, label: "Payment Management", href: "/dashboard/admin/payments" },
+      { icon: Magnifier, label: "Manage Appointments", href: "/dashboard/admin/manageAppointment" },
+      { icon: Bell, label: "Payment Management", href: "/dashboard/admin/stripeCashFlows" },
     ],
   };
 

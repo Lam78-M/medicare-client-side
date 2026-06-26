@@ -6,10 +6,8 @@ import DashboardPrescrip from './dashboardPrescrip/page';
 import { authClient } from "@/lib/auth-client"; 
 
 const DoctorsPage = () => { 
-    const doctorId = "6a35f5c6b5460cb6499eef86"; 
-
     // --- State Management ---
-    const [reviews, setReviews] = useState([]);
+    const [allReviews, setAllReviews] = useState([]); // ডাটাবেজের সব রিভিউ এখানে থাকবে
     const [appointments, setAppointments] = useState([]);
     const [loadingReviews, setLoadingReviews] = useState(true);
     const [loadingAppointments, setLoadingAppointments] = useState(true);
@@ -18,18 +16,20 @@ const DoctorsPage = () => {
     // 🟢 Better Auth সেশন ডেটা ফেচিং
     const { data: session } = authClient.useSession();
     const doctorEmail = session?.user?.email;
+    const currentDoctorName = session?.user?.name; // সেশন থেকে ডক্টরের নাম নিচ্ছি
 
-    // 🔄 1. Fetch Doctor's Reviews
+    // 🔄 ১. ডাটাবেজ থেকে সব রিভিউ নিয়ে আসা (তোমার গ্লোবাল রিভিউ API ব্যবহার করে)
     useEffect(() => {
-        const fetchReviews = async () => {
-            if (!doctorId) return;
+        const fetchAllReviews = async () => {
             try {
                 setLoadingReviews(true);
-                const response = await fetch(`http://localhost:5000/api/v1/reviews/doctor/${doctorId}`);
+                // তোমার তৈরি করা গ্লোবাল রিভিউ রুটটি কল করছি
+                const response = await fetch(`http://localhost:5000/api/v1/reviews`);
                 if (!response.ok) throw new Error('Server returned an error');
                 const data = await response.json();
+                
                 if (data.success) {
-                    setReviews(data.reviews || []); 
+                    setAllReviews(data.reviews || []); 
                 }
             } catch (err) {
                 console.error("Reviews error:", err.message);
@@ -38,10 +38,10 @@ const DoctorsPage = () => {
                 setLoadingReviews(false);
             }
         };
-        fetchReviews();
-    }, [doctorId]);
+        fetchAllReviews();
+    }, []);
 
-    // 🔄 2. Fetch Doctor's Specific Appointments
+    // 🔄 ২. ডক্টরের ইমেইল দিয়ে নির্দিষ্ট অ্যাপয়েন্টমেন্ট ফেচ করা
     useEffect(() => {
         if (!doctorEmail) return;
         
@@ -63,11 +63,22 @@ const DoctorsPage = () => {
             });
     }, [doctorEmail]);
 
-    // 📊 Runtime Logic Computations
-    const hasReviews = reviews.length > 0;
-    const singleRating = hasReviews ? reviews[0].rating : 0;
+    // 📊 Runtime Logic Computations (ফ্রন্টএন্ড ফিল্টারিং)
     
-    // Pending and Checked filtering algorithm
+    // সেশনে যে ডক্টর লগইন আছেন, তার নামের সাথে মিলিয়ে রিভিউ ফিল্টার করা হচ্ছে
+    const filteredReviews = allReviews.filter(review => {
+        if (!currentDoctorName || !review.doctorName) return false;
+        return review.doctorName.trim().toLowerCase() === currentDoctorName.trim().toLowerCase();
+    });
+
+    const totalReviews = filteredReviews.length;
+    
+    // ডক্টরের সবগুলো রিভিউর গড় (Average Rating) বের করার অ্যালগরিদম
+    const averageRating = totalReviews > 0 
+        ? (filteredReviews.reduce((sum, rev) => sum + (rev.rating || 0), 0) / totalReviews).toFixed(1) 
+        : 0;
+    
+    // Pending and Approved filtering algorithm
     const pendingCount = appointments.filter(app => app && app.status !== "Approved").length;
     const approvedCount = appointments.filter(app => app && app.status === "Approved").length;
 
@@ -83,7 +94,6 @@ const DoctorsPage = () => {
 
     return (
         <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', padding: '24px', fontFamily: 'sans-serif' }}>
-            {/* 🛠️ mx-auto/margin-0-auto dropped. Styled purely for Left Alignment */}
             <div style={{ maxWidth: '900px', margin: '0', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
                 {/* 📊 Top Widgets Area - Left Aligned Uniform Cards */}
@@ -93,11 +103,11 @@ const DoctorsPage = () => {
                     <div style={{ backgroundColor: '#021A54', color: '#FFFFFF', padding: '16px', borderRadius: '24px', flex: '1 1 ' , minWidth: '220px', maxWidth: '280px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.15)', textAlign: 'center' }}>
                         <div style={{ marginBottom: '12px' }}>
                             <span style={{ fontSize: '11px', display: 'block', color: '#FFCEE3', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Reviews</span>
-                            <span style={{ fontSize: '32px', fontWeight: '900', color: '#FFFFFF', lineHeight: '1' }}>{reviews.length}</span>
+                            <span style={{ fontSize: '32px', fontWeight: '900', color: '#FFFFFF', lineHeight: '1' }}>{totalReviews}</span>
                         </div>
                         <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', padding: '10px', borderRadius: '14px', border: '1px solid rgba(255, 133, 187, 0.3)' }}>
-                            <span style={{ fontSize: '11px', display: 'block', color: '#FFCEE3', marginBottom: '2px', fontWeight: 'bold' }}>Rating Score</span>
-                            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#FFFFFF' }}>⭐ {singleRating} / 5</span>
+                            <span style={{ fontSize: '11px', display: 'block', color: '#FFCEE3', marginBottom: '2px', fontWeight: 'bold' }}>Average Rating</span>
+                            <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#FFFFFF' }}>⭐ {averageRating} / 5</span>
                         </div>
                     </div>
 

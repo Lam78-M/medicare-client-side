@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🩺 MediCare Connect – Hospital Appointment & Healthcare Management System
 
-## Getting Started
+MediCare Connect is a modern, full-stack healthcare ecosystem designed to bridge the gap between patients, doctors, and hospital administrators. By digitizing appointment bookings, securing medical records, and incorporating a seamless payment infrastructure, the platform eliminates long waiting times and streamlines clinical workflows.
 
-First, run the development server:
+## 🚀 Live Links & Credentials
+*   **Live Deployment:** [Insert Live Site Link Here]
+*   **Client-Side Repository:** [Insert GitHub Client Link Here]
+*   **Server-Side Repository:** [Insert GitHub Server Link Here]
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🔑 Demo Admin Credentials
+*   **Email:** `admin@medicare.com` *(Or your specific admin email)*
+*   **Password:** `Admin@1234` *(Or your specific admin password)*
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend
+*   **Framework:** Next.js (React)
+*   **Styling:** Tailwind CSS + DaisyUI / HeroUI
+*   **Animations:** Framer Motion
+*   **Data Visualization:** Recharts
+*   **State & Auth:** Better Auth / Firebase Hooks
+*   **Payments:** Stripe Element SDK
 
-## Learn More
+### Backend & Database
+*   **Runtime Environment:** Node.js
+*   **Framework:** Express.js
+*   **Database:** MongoDB (Mongoose / Native Driver)
+*   **Authentication:** JSON Web Tokens (JWT)
+*   **Payment Processing:** Stripe API
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ✨ Key Features & Challenge Solutions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 🔍 Challenge 1 & 2: Advanced Search, Filtering & Sorting
+*   **Dynamic Search:** Instantly find doctors by matching their **Name** or **Specialization** via a debounced search input.
+*   **Multi-Criteria Sorting:** Sort the available specialist list based on **Consultation Fee (Low to High / High to Low)**, **Years of Experience**, or **Highest Rating**.
+*   **Challenge 4 Implementation (Pagination):** The "Find Doctors" catalog uses clean, server-side pagination to ensure lightning-fast load times even with thousands of doctor profiles.
 
-## Deploy on Vercel
+### 🛡️ Challenge 3: Strict JWT Token Verification & Auth
+*   **Secure API Routes:** All private, patient, doctor, and admin endpoints are fully protected via backend middleware verifying the HTTP-Only cookie / Bearer JWT token.
+*   **Role-Based Authorization (RBAC):** Users trying to access a dashboard route belonging to another role (e.g., a Patient trying to view `/dashboard/admin`) are automatically intercepted and redirected.
+*   **Session Persistence:** Secure context management ensuring logged-in users remain authenticated flawlessly upon a hard browser refresh.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 💳 Integrated Stripe Payment Gateway
+*   Patients are required to pay the doctor's consultation fee upfront securely via Stripe. The appointment remains in a `Pending Payment` state until a successful webhook/transaction ID is written to the database.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 👥 Role-Based Dashboards
+
+### 👤 Patient Dashboard
+*   **Overview:** View upcoming appointments, lifetime prescription history, total spend, and favorite doctors.
+*   **My Appointments:** Full CRUD capabilities to view details, reschedule open dates, or cancel appointments.
+*   **Payment History:** Scannable breakdown of paid invoices with official Stripe Transaction IDs.
+*   **My Reviews:** Add, edit, or delete feedback and ratings left on doctor profiles.
+
+### 🥼 Doctor Dashboard
+*   **Profile Management:** Update professional qualifications, experience, hospital attachments, fees, and slot timings.
+*   **Manage Schedule:** Full CRUD controls to add or eliminate available days and specific hourly time slots.
+*   **Appointment Requests:** Interactive panel to Accept, Reject, or Mark Consultations as Completed.
+*   **Prescription Generation:** Marking an appointment as completed instantly routes the doctor to an interactive form to issue digital prescriptions (`Diagnosis`, `Medications`, `Notes`).
+
+### 👑 Admin Dashboard
+*   **User & Doctor Management:** View, suspend, or delete users. Review new doctor profiles to approve/Verify or Reject their medical license status.
+*   **Global Overviews:** Monitor all global appointments, systemic payment flows, and track operational logs.
+*   **Advanced Analytics:** A visual metrics panel designed using **Recharts** highlighting Doctor performance metrics, aggregate patient sign-ups, and monthly revenue data.
+
+---
+
+## 🎨 UI/UX Specifications
+*   **Modern Theme:** Built using a custom, clean healthcare color palette (Deep Teals, Medical Blues, and Crisp Whites).
+*   **Framer Motion Integration:** Smooth, fluid page transitions and layout animations applied across the Homepage Banner and Interactive Statistics sections.
+*   **Robust Error Handling:** Features a custom-designed **404 page** with contextual illustration and an immediate "Back to Home" routing capability.
+*   **Responsive Layout:** Fully optimized down to 320px mobile screens up to ultra-wide desktop monitors utilizing responsive sidebars and CSS grids.
+
+---
+
+## ⚙️ Environment Variables Setup
+
+Create an `.env.local` file in your **client** directory and an `.env` file in your **server** directory.
+
+### Client Environment Variables
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+NEXT_PUBLIC_API_URL=http://localhost:5000
