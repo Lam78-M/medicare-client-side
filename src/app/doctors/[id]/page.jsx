@@ -31,10 +31,21 @@ const DoctorDetailPage = () => {
         return `${hour}:${minutes} ${ampm}`;
     };
 
+    //token 
+
+  const [tokenData, setTokenData] = useState(null);
+
     useEffect(() => {
         const fetchDoctorDetails = async () => {
             try {
-                const res = await fetch(`http://localhost:5000/api/doctors/${id}`);
+                  const tokenResponse = await authClient.token();
+                setTokenData(tokenResponse?.data);
+
+                const res = await fetch(`http://localhost:5000/api/doctors/${id}`,{
+                    headers:{
+                       authorization: `Bearer ${tokenResponse?.data?.token}`
+                    }
+                });
                 const data = await res.json();
                 setDoctor(data);
             } catch (error) {

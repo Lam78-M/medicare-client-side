@@ -19,6 +19,10 @@ const DoctorsPage = () => {
     const [selectedSpecialty, setSelectedSpecialty] = useState('');
     const [sortOrder, setSortOrder] = useState(''); 
 
+    // 📄 Pagination States (প্রতি পেজে ১২টি করে)
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12;
+
     const specializations = [
         "Cardiology",
         "Neurology",
@@ -32,32 +36,36 @@ const DoctorsPage = () => {
         setSearch('');
         setSelectedSpecialty('');
         setSortOrder('');
+        setCurrentPage(1); // ফিল্টার রিসেট হলে প্রথম পেজে ফেরত যাবে
     };
+
+    // ফিল্টার চেঞ্জ হলে যেন পেজিনেশন আবার ১ নম্বর পেজ থেকে শুরু হয়
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, selectedSpecialty, sortOrder]);
 
     // 🎯 handleBookingClick ফাংশন রিঅ্যাক্ট টোস্ট সহ
     const handleBookingClick = (doctor, doctorId) => {
         const currentStatus = doctor?.verificationStatus?.toLowerCase();
 
         if (currentStatus === "pending") {
- toast.warn("This doctor is currently under verification. Booking is disabled until Admin approval!", {
-    position: "bottom-right",
-    autoClose: 4000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    // 🎯 ইনলাইন স্টাইল দিয়ে ব্যাকগ্রাউন্ড কালার জোরপূর্বক সেট করা হলো
-    style: {
-        backgroundColor: '#021A54',
-        color: '#ffffff',
-        borderRadius: '12px'
-    },
-    // প্রোগ্রেস বারের কালার (গোলাপী/পিঙ্ক শেড)
-    progressStyle: {
-        backgroundColor: '#FF85BB'
-    }
-});
+            toast.warn("This doctor is currently under verification. Booking is disabled until Admin approval!", {
+                position: "bottom-right",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                style: {
+                    backgroundColor: '#021A54',
+                    color: '#ffffff',
+                    borderRadius: '12px'
+                },
+                progressStyle: {
+                    backgroundColor: '#FF85BB'
+                }
+            });
             return; 
         }
 
@@ -99,6 +107,13 @@ const DoctorsPage = () => {
 
         return () => clearTimeout(delayDebounceFn);
     }, [search, selectedSpecialty, sortOrder]);
+
+    // 🧮 Pagination Calculations
+    const totalPages = Math.ceil(doctors.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    // বর্তমান পেজের জন্য শুধু ১২টি ডক্টর স্লাইস করা হচ্ছে
+    const currentDoctors = doctors.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
         <div className="min-h-screen py-12 px-4 md:px-10" style={{ backgroundColor: '#F5F5F5' }}>
@@ -191,7 +206,7 @@ const DoctorsPage = () => {
             ) : viewMode === 'grid' ? (
                 /* 🗂️ GRID/CARD MODE LAYOUT */
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {doctors.map((doctor) => {
+                    {currentDoctors.map((doctor) => {
                         const doctorId = doctor._id?.$oid || doctor._id;
                         const isPending = doctor.verificationStatus?.toLowerCase() === "pending";
 
@@ -250,7 +265,7 @@ const DoctorsPage = () => {
                     })}
                 </div>
             ) : (
-                /* 📊 TABULAR VIEW MODE LAYOUT (এখানে ট্যাগ এরর ঠিক করা হয়েছে 🎯) */
+                /* 📊 TABULAR VIEW MODE LAYOUT */
                 <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-sm border border-[#021A54]/10 overflow-hidden">
                     <div className="overflow-x-auto w-full">
                         <table className="w-full text-left border-collapse">
@@ -265,7 +280,7 @@ const DoctorsPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50 text-sm font-medium text-gray-600">
-                                {doctors.map((doctor) => {
+                                {currentDoctors.map((doctor) => {
                                     const doctorId = doctor._id?.$oid || doctor._id;
                                     const isPending = doctor.verificationStatus?.toLowerCase() === "pending";
 
@@ -325,6 +340,69 @@ const DoctorsPage = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            )}
+
+            {/* 🎯 PREMIUM CUSTOM LARGE PAGINATION UI */}
+            {!loading && totalPages > 1 && (
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200/60">
+                    <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl shadow-[0_8px_20px_rgba(2,26,84,0.05)] border border-gray-100">
+                        {/* Previous Button */}
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={`h-11 px-5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 active:scale-95 ${
+                                currentPage === 1 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-transparent text-[#021A54] hover:bg-[#FFCEE3] hover:text-[#021A54]'
+                            }`}
+                        >
+                            <span>◀</span> Prev
+                        </button>
+
+                        {/* Page Numbers */}
+                        <div className="flex items-center gap-1.5 border-l border-r border-gray-100 px-3">
+                            {[...Array(totalPages)].map((_, index) => {
+                                const pageNumber = index + 1;
+                                const isActive = currentPage === pageNumber;
+                                return (
+                                    <button
+                                        key={pageNumber}
+                                        onClick={() => setCurrentPage(pageNumber)}
+                                        className={`w-11 h-11 rounded-xl text-sm font-extrabold transition-all duration-300 transform active:scale-95 ${
+                                            isActive
+                                            ? 'text-white shadow-md scale-105 font-black'
+                                            : 'text-[#021A54] hover:bg-gray-100'
+                                        }`}
+                                        style={{
+                                            backgroundColor: isActive ? '#021A54' : 'transparent',
+                                            boxShadow: isActive ? '0 4px 12px rgba(2, 26, 84, 0.25)' : 'none'
+                                        }}
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Next Button */}
+                        <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className={`h-11 px-5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2 active:scale-95 ${
+                                currentPage === totalPages 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-transparent text-[#021A54] hover:bg-[#FFCEE3] hover:text-[#021A54]'
+                            }`}
+                        >
+                            Next <span>▶</span>
+                        </button>
+                    </div>
+
+                    {/* Page status text indicator */}
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-400 bg-gray-100/70 px-4 py-2 rounded-full border border-gray-200/50">
+                        Page <strong style={{ color: '#021A54' }}>{currentPage}</strong> of {totalPages}
+                    </span>
                 </div>
             )}
         </div>

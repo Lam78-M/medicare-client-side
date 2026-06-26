@@ -2,16 +2,24 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+// 🟢 সেশন চেক এবং টোস্টের জন্য ইম্পোর্ট করা হলো
+import { authClient } from "@/lib/auth-client";
+import { toast } from "react-toastify";
 
 const FeaturedDoctors = () => {
+    const router = useRouter();
     const [doctors, setDoctors] = useState([]);  
     const [loading, setLoading] = useState(true);
+
+    // 🟢 Better Auth লাইভ সেশন ডেটা আনা হলো
+    const { data: session } = authClient.useSession();
+    const user = session?.user;
 
     useEffect(() => {
         const fetchFeaturedData = async () => {
             setLoading(true);
             try {
-                // 🟢 Filter update: query string syntax pass status = Approved
                 let url = `http://localhost:5000/api/doctors?status=Approved`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -34,6 +42,26 @@ const FeaturedDoctors = () => {
         fetchFeaturedData();
     }, []);
 
+    // 🟢 বুকিং বাটন হ্যান্ডলার (Redirect Back লজিকসহ)
+    const handleBookingClick = (e, doctorId) => {
+        if (!user) {
+            // যদি ইউজার লগইন না থাকে, লিংকের ডিফল্ট অ্যাকশন বন্ধ করো
+            e.preventDefault(); 
+            
+            // টোস্ট মেসেজ দেখাও
+            toast.warn("Please Login or Register to book an appointment! 🔐", {
+                position: "top-center",
+                autoClose: 3000
+            });
+
+            // 🎯 ডক্টরের নির্দিষ্ট বুকিং পেজের পাথটি তৈরি করলাম
+            const targetUrl = `/doctors`;
+
+            // 🚀 সাইনআপ পেজে পাঠানোর সময় callbackUrl হিসেবে টার্গেট পাথটি জুড়ে দিলাম
+            router.push(`/auth/signup?callbackUrl=${encodeURIComponent(targetUrl)}`);
+        }
+    };
+
     return (
         <div className="py-16 px-4 md:px-10 bg-[#F5F5F5]">
             
@@ -48,8 +76,7 @@ const FeaturedDoctors = () => {
                 <div>
                     <Link 
                         href="/doctors" 
-                        // Updated to match core theme system colors
-                        className="inline-flex items-center gap-1.5 font-bold text-sm px-5 py-2.5 rounded-xl border transition-all duration-300 shadow-sm active:scale-95 text-[#021A54] border-[#021A54]/20 bg-white hover:bg-[#021A54] hover:text-white"
+                        className="inline-flex items-center gap-1.5 font-bold text-sm px-5 py-2.5 rounded-xl border transition-all duration-300 shadow-sm active:scale-95 text-[#021A54] border-[#021A54]/20 bg-white hover:bg-[#021A54] hover:text-black "
                     >
                         See All Doctors ➔
                     </Link>
@@ -72,7 +99,6 @@ const FeaturedDoctors = () => {
                         return (
                             <div 
                                 key={doctorId} 
-                                // 🎨 🟢 Ekhane dynamic custom heavy shadow & border logic input dewa holo
                                 className="bg-white rounded-3xl border border-[#2652b8]/20 hover:border-[#FF85BB] shadow-[0_10px_25px_rgba(2,26,84,0.15)] hover:shadow-[0_20px_35px_rgba(38,82,184,0.3)] hover:-translate-y-2 transform transition-all duration-300 overflow-hidden flex flex-col justify-between group"
                             >
                                 <div className="p-5 flex flex-col items-center text-center">
@@ -111,9 +137,10 @@ const FeaturedDoctors = () => {
                                         <p className="text-lg font-black text-[#021A54]">৳ {doctor.consultationFee}</p>
                                     </div>
                                     
+                                    {/* 🟢 Link ও onClick একসাথে হ্যান্ডেল করা হয়েছে */}
                                     <Link
                                         href={`/doctors/${doctorId}`} 
-                                        // Dynamic action state matching main routing components
+                                        onClick={(e) => handleBookingClick(e, doctorId)}
                                         className="text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-300 shadow-sm active:scale-95 bg-[#021A54] group-hover:bg-[#FF85BB] hover:opacity-90" 
                                     >
                                         Book Now

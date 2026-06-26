@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Heart, LogOut, ChevronDown, Menu, X } from "lucide-react";
-
 import { Avatar } from "@heroui/react"; 
+// 🟢 react-toastify ইম্পোর্ট করা হয়েছে
+import { toast } from "react-toastify";
 
 export default function Navbar() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export default function Navbar() {
   
   if (user?.role) {
     if (user.role === "doctor" || user.role === "doctors") {
-      dashboardHref = "/dashboard/doctors"; // Tomar config e 'doctors' dewa tai doctors rakhlam
+      dashboardHref = "/dashboard/doctors"; 
     } else if (user.role === "admin") {
       dashboardHref = "/dashboard/admin";
     } else {
@@ -53,7 +54,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 🚪 Logout Handler
+  // 🚪 Logout Handler (Fixed Toast Theme Match)
   const handleLogout = async () => {
     try {
       await authClient.signOut({
@@ -61,14 +62,37 @@ export default function Navbar() {
           onSuccess: () => {
             setIsOpen(false);
             setDropdownOpen(false);
-            localStorage.removeItem("user_role"); // Sidebar e localstorage thakle clear korar jonne
-            router.push("/");
-            router.refresh();
+            localStorage.removeItem("user_role"); 
+            
+            // 🎯 অন্য সব টোস্টের মতো একদম সেম ডিফল্ট থিম স্টাইল
+            toast.success("Successfully Logged Out! See you soon. 👋", {
+              position: "top-center",
+              autoClose: 2000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+
+            // ⏱️ ১ সেকেন্ড অপেক্ষা করবে যেন টোস্টটি পুরোপুরি দেখা যায়, তারপর রিফ্রেশ হবে
+            setTimeout(() => {
+              router.push("/");
+              router.refresh();
+            }, 1000);
           },
+          onError: (ctx) => {
+            toast.error(ctx.error.message || "Logout failed! ❌", {
+              position: "top-center",
+            });
+          }
         },
       });
     } catch (error) {
       console.error("Logout failed:", error);
+      toast.error("Something went wrong! ❌", {
+        position: "top-center"
+      });
     }
   };
 
@@ -130,7 +154,6 @@ export default function Navbar() {
                       <p className="text-sm font-bold text-[#FFCEE3] truncate mt-0.5">{user.email}</p>
                     </div>
                     
-                    {/* Extra Safe Dashboard Button in dropdown */}
                     <Link
                       href={dashboardHref}
                       onClick={() => setDropdownOpen(false)}

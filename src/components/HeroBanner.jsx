@@ -1,5 +1,6 @@
 "use client";
 import { ArrowUpRight, ShieldCheck, Person } from "@gravity-ui/icons";
+import Link from "next/link";
 import Image from "next/image";
 
 export function HeroBanner() {
@@ -30,10 +31,10 @@ export function HeroBanner() {
             </p>
 
             <div className="pt-4 flex flex-wrap gap-4 items-center">
-              <button className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-8 py-4 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center gap-2 group text-sm tracking-wide border-none">
+              <Link href={'/doctors'} className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-8 py-4 rounded-xl shadow-lg transition-all transform active:scale-95 flex items-center gap-2 group text-sm tracking-wide border-none">
                 Book An Appointment
                 <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" style={{ width: '16px', height: '16px' }} />
-              </button>
+              </Link>
               
               <button className="btn btn-outline border-slate-400 hover:bg-white/5 text-white font-semibold px-6 py-4 h-auto min-h-0 rounded-xl text-sm normal-case">
                 See How It Works
