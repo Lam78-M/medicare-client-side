@@ -2,56 +2,54 @@
 
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
-// 🟢 Better Auth ক্লায়েন্ট হেল্পার ইমপোর্ট করলাম
 import { authClient } from "@/lib/auth-client"; 
 
 export default function DashboardPrescrip() {
-    // MongoDB থেকে আসা ডাটার স্টেট
     const [prescriptionsList, setPrescriptionsList] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // 🟢 Better Auth থেকে কারেন্ট ডক্টর সেশন রিড করা
     const { data: session, isPending: authPending } = authClient.useSession();
     const doctorEmail = session?.user?.email;
 
-    // 🔄 MongoDB Atlas থেকে সব ডাটা লোড করার ফাংশন
-    const fetchPrescriptions = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch("http://localhost:5000/api/prescriptions/all");
-            const data = await response.json();
-            
-            if (Array.isArray(data)) {
-                setPrescriptionsList(data);
+ const fetchPrescriptions = async () => {
+    try {
+        setLoading(true);
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
+        const response = await fetch("http://localhost:5000/api/prescriptions/all", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${tokenData?.token}`
             }
-        } catch (error) {
-            console.error("❌ Error fetching from MongoDB:", error);
-        } finally {
-            setLoading(false);
+        });
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            setPrescriptionsList(data);
         }
-    };
+    } catch (error) {
+        console.error("❌ Error fetching from MongoDB:", error);
+    } finally {
+        setLoading(false);
+    }
+};
+useEffect(() => {  
+    fetchPrescriptions();
+}, []);
 
-    // পেজ লোড হওয়ার সাথে সাথে ডাটা নিয়ে আসবে
-    useEffect(() => {  
-        fetchPrescriptions();
-    }, []);
-
-    // 🛑 STRICT DOCTOR FILTER MATRIX: শুধুমাত্র লগইন করা ডক্টরের ডাটা ফিল্টার করা
     const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
     
     const myFilteredPrescriptions = prescriptionsList.filter((pres) => {
         if (!pres) return false;
-        
-        // ব্যাকএন্ডের 'doctorEmail' ফিল্ডের সাথে কারেন্ট সেশনের ইমেইল ম্যাচ করানো হচ্ছে
         const presDoctorEmail = pres.doctorEmail || pres.doctor_email;
         
         if (presDoctorEmail && currentDoctorEmail) {
             return presDoctorEmail.trim().toLowerCase() === currentDoctorEmail;
         }
-        return false; // ইমেইল না মিললে ড্যাশবোর্ডে দেখাবে না
+        return false; 
     });
 
-    // সেশন লোড হওয়া পর্যন্ত স্পিনার শো করবে
     if (authPending || (loading && doctorEmail)) {
         return (
             <div className="flex justify-center items-center py-20 w-full">
@@ -60,7 +58,6 @@ export default function DashboardPrescrip() {
         );
     }
 
-    // যদি ডক্টর লগইন করা না থাকে
     if (!session) {
         return (
             <div className="p-6 text-center font-bold text-red-500 bg-red-50 rounded-3xl border border-red-100 text-sm">
@@ -68,19 +65,16 @@ export default function DashboardPrescrip() {
             </div>
         );
     }
-
     return (
-        /* Full background setup standard base using #021A54 */
         <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 w-full font-sans">
             <div className="max-w-2xl space-y-6 ">
 
                 {myFilteredPrescriptions.length === 0 ? (
-                    /* ডাটা না থাকলে এই ভিউ দেখাবে (Styled smoothly inside layout scheme) */
                     <div className="bg-[#021A54]/5 text-center text-[#021A54] font-medium p-16 rounded-3xl border border-dashed border-[#021A54]/20 shadow-sm">
                         No prescriptions saved under your account yet. 📋
                     </div>
                 ) : (  
-                    /* 🗂️ প্রেসক্রিপশন কার্ড লিস্ট */
+       
                     <div className="space-y-4">
                         {myFilteredPrescriptions.map((pres) => (
                             <div 

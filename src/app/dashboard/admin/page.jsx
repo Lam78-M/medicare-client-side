@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// 🎯 Framer Motion ইমপোর্ট করা হলো এনিমেশনের জন্য
 import { motion } from "framer-motion";
-// 🎯 Lucide React থেকে আইকনগুলো নেওয়া হলো
 import { Users, UserCheck, Activity, ShieldAlert, RefreshCw } from "lucide-react";
 import DoctorRecharts from "./doctorsRecharts.jsx/page";
 
@@ -11,29 +9,38 @@ export default function DashboardOverview() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // সব ইউজার লোড করার ফাংশน
-    const loadUsers = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch("http://localhost:5000/api/admin/all-users");
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setUsers(data);
-            }
-        } catch (err) {
-            console.error("Error fetching users for dashboard", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const loadUsers = async () => {
+    try {
+        setLoading(true);
 
-    useEffect(() => {
-        loadUsers();
-    }, []);
+        const tokenData = await authClient.token();
+         const token = tokenData?.token;
+
+        const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${tokenData?.token}`
+            }
+        });
+
+        const data = await res.json();
+        if (Array.isArray(data)) {
+            setUsers(data);
+        }
+    } catch (err) {
+        console.error("Error fetching users for dashboard", err);
+    } finally {
+        setLoading(false);
+    }
+};
+
+useEffect(() => {
+    loadUsers();
+}, []);
 
     if (loading) return <div className="p-10 text-center font-bold text-[#021A54]">Loading Dashboard Metrics...</div>;
 
-    // 📊 ডাটাবেজের ইউজার ফিল্টার করে মেটট্রিক্স হিসাব করা
     const totalUsers = users.length;
     const totalPatients = users.filter(user => (user.role || "patient").toLowerCase() === "patient").length;
     const totalDoctors = users.filter(user => user.role?.toLowerCase() === "doctor").length;
@@ -42,13 +49,12 @@ export default function DashboardOverview() {
     const activeUsers = users.filter(user => (user.status || "active") === "active").length;
     const suspendedUsers = users.filter(user => user.status === "suspended").length;
 
-    // 🎨 কার্ডের জন্য ডাটা অ্যারে তৈরি (লুসিড আইকন সহ)
     const cardsData = [
         {
             title: "Total Patients",
             count: totalPatients,
             icon: <Users size={22} />,
-            bgColor: "#FFCEE3", // লাইট পিঙ্ক
+            bgColor: "#FFCEE3", 
             textColor: "#021A54",
             description: "Registered medical service receivers"
         },
@@ -56,7 +62,7 @@ export default function DashboardOverview() {
             title: "Verified Doctors",
             count: totalDoctors,
             icon: <UserCheck size={22} />,
-            bgColor: "#021A54", // নেভি ব্লু
+            bgColor: "#021A54", 
             textColor: "#ffffff",
             description: "Active clinical ecosystem experts"
         },
@@ -64,7 +70,7 @@ export default function DashboardOverview() {
             title: "Active Users",
             count: activeUsers,
             icon: <Activity size={22} />,
-            bgColor: "#ffffff", // হোয়াইট
+            bgColor: "#ffffff", 
             textColor: "#021A54",
             description: "Currently active accounts on hub",
             border: "1px solid #e5e7eb"
@@ -73,13 +79,12 @@ export default function DashboardOverview() {
             title: "Suspended Accounts",
             count: suspendedUsers,
             icon: <ShieldAlert size={22} />,
-            bgColor: "#fee2e2", // হালকা লাল
+            bgColor: "#fee2e2", 
             textColor: "#ef4444",
             description: "Temporarily restricted system profiles"
         }
     ];
 
-    // Framer Motion কন্টেইনার এনিমেশন কনফিগ
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
@@ -95,7 +100,6 @@ export default function DashboardOverview() {
 
     return (
      <div>
-            {/* 🛠️ এখানে py-10 থেকে কমিয়ে py-6 করা হয়েছে যেন অতিরিক্ত স্পেস না নেয় */}
             <div className="py-6 px-4 md:px-8" style={{ backgroundColor: '#FFFFFF' }}>
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}

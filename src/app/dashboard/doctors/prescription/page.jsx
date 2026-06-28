@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify"; 
-// 🟢 Better Auth ক্লায়েন্ট হেল্পার
 import { authClient } from "@/lib/auth-client"; 
 
 function PrescriptionContent() {
@@ -20,7 +19,6 @@ function PrescriptionContent() {
     const [activeAppointmentId, setActiveAppointmentId] = useState("");
     const [prescriptionsList, setPrescriptionsList] = useState([]);
 
-    // 🟢 Better Auth থেকে কারেন্ট ডক্টর সেশন রিড করা
     const { data: session } = authClient.useSession();
     const doctorEmail = session?.user?.email;
 
@@ -33,40 +31,46 @@ function PrescriptionContent() {
         }
     }, [urlAppId, nameFromUrl]);
 
-    const fetchPrescriptions = async () => {
-        try {
-            const response = await fetch("http://localhost:5000/api/prescriptions/all");
-            const data = await response.json();
-            
-            if (Array.isArray(data)) {
-                setPrescriptionsList(data);
+const fetchPrescriptions = async () => {
+    try {
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
+        const response = await fetch(`http://localhost:5000/api/prescriptions/all`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${tokenData?.token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            setPrescriptionsList(data);
 
-                if (urlAppId) {
-                    const existing = data.find((p) => p.appointmentId === urlAppId);
-                    if (existing) {
-                        setSymptoms(existing.symptoms || "");
-                        setMedicines(existing.medicines || "");
-                        setAdvice(existing.advice || "");
-                        setSelectedPatientName(existing.patientName || nameFromUrl);
-                    }
+            if (urlAppId) {
+                const existing = data.find((p) => p.appointmentId === urlAppId);
+                if (existing) {
+                    setSymptoms(existing.symptoms || "");
+                    setMedicines(existing.medicines || "");
+                    setAdvice(existing.advice || "");
+                    setSelectedPatientName(existing.patientName || nameFromUrl);
                 }
             }
-        } catch (error) {
-            console.error("❌ Error fetching from MongoDB:", error);
-            toast.error("Failed to fetch prescriptions! 📋"); 
         }
-    };
+    } catch (error) {
+        console.error("❌ Error fetching from MongoDB:", error);
+        toast.error("Failed to fetch prescriptions! 📋"); 
+    }
+};
 
-    useEffect(() => {
-        fetchPrescriptions();
-    }, [urlAppId]);
+useEffect(() => {
+    fetchPrescriptions();
+}, [urlAppId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // যদি ইউজার হিস্ট্রি কার্ডে ক্লিক করে তবে activeAppointmentId চেঞ্জ হবে, অন্যথায় URL-এর আইডি থাকবে
         const finalAppointmentId = activeAppointmentId || urlAppId || `AUTO-${Date.now()}`;
-
         const prescriptionData = {
             appointmentId: finalAppointmentId,
             patientName: selectedPatientName, 
@@ -77,12 +81,17 @@ function PrescriptionContent() {
         };
 
         console.log("🚀 Syncing with Backend (Upsert Mode):", prescriptionData);
+             
+         //better auth
+         const tokenData = await authClient.token(); 
+                    const token = tokenData?.token; 
 
         try {
-            // 🎯 তোমার ব্যাকএন্ডের সিঙ্গেল রুট যা একইসাথে সেভ এবং এডিট হ্যান্ডেল করতে পারে!
-            const response = await fetch("http://localhost:5000/api/prescriptions/save", {
+            const response = await fetch(`http://localhost:5000/api/prescriptions/save`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization : `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify(prescriptionData),
             });
 
@@ -91,15 +100,13 @@ function PrescriptionContent() {
 
             if (result.success || response.ok) {
                 toast.success("📋 Prescription Synchronized successfully! 🎉");
-                
-                // ফর্ম রিসেট করে আবার ডিফল্ট URL মুডে নিয়ে যাওয়া
                 setSymptoms("");
                 setMedicines("");
                 setAdvice("");
                 setActiveAppointmentId(urlAppId); 
                 setSelectedPatientName(nameFromUrl);
                 
-                // লাইভ হিস্ট্রি ডাটা রিফ্রেশ করা
+               
                 fetchPrescriptions();
             } else {
                 toast.error(`⚠️ Error: ${result.message || "Failed to sync"}`);
@@ -109,8 +116,6 @@ function PrescriptionContent() {
             toast.error("Backend server connection failed! 🌐");
         }
     };
-
-    // 🛑 STRICTOR FILTERING MATRIX
     const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
     
     const myFilteredPrescriptions = prescriptionsList.filter((pres) => {

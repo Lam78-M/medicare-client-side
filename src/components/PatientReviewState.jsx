@@ -1,15 +1,11 @@
-
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { authClient } from "@/lib/auth-client";
 import { Star, MessageSquare, Loader2 } from "lucide-react";
 
 export default function TopThreeReviewsPage() {
-    const { data: session, isPending } = authClient.useSession();
-
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,36 +41,17 @@ export default function TopThreeReviewsPage() {
             }
         };
 
-        if (!isPending && session?.user) {
-            fetchReviews();
-        } else if (!isPending && !session) {
-            setLoading(false);
-        }
-    }, [session, isPending]);
+        // 🎯 কোনো সেশন চেক ছাড়াই পেজ লোড হলেই এপিআই কল হবে
+        fetchReviews();
+    }, []);
 
-    if (isPending || loading) {
+    if (loading) {
         return (
             <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center gap-4">
                 <Loader2 className="w-12 h-12 text-[#FF85BB] animate-spin" />
                 <p className="font-medium text-[#021A54]">
                     Loading Reviews...
                 </p>
-            </div>
-        );
-    }
-
-    if (!session || !session.user) {
-        return (
-            <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center p-4">
-                <div className="bg-white border border-red-100 rounded-3xl shadow-sm px-8 py-6 text-center max-w-md w-full">
-                    <h2 className="text-xl font-bold text-red-500 mb-2">
-                        Access Restricted
-                    </h2>
-
-                    <p className="text-gray-600">
-                        Please sign in to view patient reviews.
-                    </p>
-                </div>
             </div>
         );
     }
@@ -181,10 +158,6 @@ export default function TopThreeReviewsPage() {
 
                                         {/* Review Box */}
                                         <div className="bg-[#F5F5F5] border border-gray-100 rounded-2xl p-5 flex-1">
-                                            <p className="text-5xl text-[#FF85BB] leading-none mb-2">
-                                        
-                                            </p>
-
                                             <p className="text-sm text-[#021A54]/80 leading-relaxed">
                                                 {contentText}
                                             </p>
@@ -210,4 +183,3 @@ export default function TopThreeReviewsPage() {
         </div>
     );
 }
-

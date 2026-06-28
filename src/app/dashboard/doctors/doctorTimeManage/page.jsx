@@ -74,9 +74,14 @@ const doctorId = typeof doctorData?._id === 'object' ? doctorData?._id?.$oid : d
         };
 
         try {
+            const tokenData = await authClient.token();
+          const token = tokenData?.token;
+          
             const res = await fetch(`http://localhost:5000/api/doctors/update-slots/${doctorId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify(payload)
             });
 

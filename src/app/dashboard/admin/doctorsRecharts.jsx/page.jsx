@@ -11,17 +11,26 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import Recharts2 from "../recharts2/page";
+import Recharts3 from "../recharts3/page";
 
 export default function DoctorDashboard() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
     const loadDoctors = async () => {
       try {
-        const res = await fetch(
-          "http://localhost:5000/api/admin/pending-doctors"
-        );
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
+
+        const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${tokenData?.token}`
+            }
+        });
 
         const data = await res.json();
 
@@ -37,7 +46,6 @@ export default function DoctorDashboard() {
 
     loadDoctors();
   }, []);
-
   const totalDoctors = doctors.length;
 
   const verifiedDoctors = doctors.filter(
@@ -74,7 +82,8 @@ export default function DoctorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+ <div>
+     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -156,5 +165,8 @@ export default function DoctorDashboard() {
         </div>
       </div>
     </div>
+    <Recharts2></Recharts2>
+    <Recharts3></Recharts3>
+ </div>
   );
 }

@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 // 🎯 Framer Motion ইমপোর্ট করা হলো চমৎকার অ্যানিমেশনের জন্য
 import { motion, AnimatePresence } from "framer-motion";
+import { GiToken } from "react-icons/gi";
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
@@ -15,17 +16,29 @@ export default function ManageUsers() {
     const loadUsers = async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:5000/api/admin/all-users");
-            if (!res.ok) throw new Error(`Server error: ${res.status}`);
-            const data = await res.json();
-            if (Array.isArray(data)) setUsers(data);
-        } catch (err) {
-            console.error("Error fetching users:", err);
-            showToast("Failed to load users from server!", "error");
-        } finally {
-            setLoading(false);
-        }
-    };
+            const tokenData = await authClient.token();
+        const token = tokenData?.token;
+
+      const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                 authorization: `Bearer ${tokenData?.token}`
+            }
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        
+        const data = await res.json();
+        if (Array.isArray(data)) setUsers(data);
+        
+    } catch (err) {
+        console.error("Error fetching users:", err);
+        showToast("Failed to load users from server!", "error");
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
         loadUsers();
@@ -53,10 +66,14 @@ export default function ManageUsers() {
     // 🔄 Active / Suspend হ্যান্ডলার
     const toggleStatus = async (id, currentStatus) => {
         const nextStatus = currentStatus === "active" ? "suspended" : "active";
+             const tokenData = await authClient.token();
+        const token = tokenData?.token;
         try {
-            const res = await fetch("http://localhost:5000/api/admin/update-user-status", {
+            const res = await fetch(`http://localhost:5000/api/admin/update-user-status`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify({ id, status: nextStatus })
             });
             const data = await res.json();
@@ -73,11 +90,17 @@ export default function ManageUsers() {
 
     // 🔴 Delete হ্যান্ডলার
     const handleDeleteUser = async (id) => {
+
+             const tokenData = await authClient.token();
+        const token = tokenData?.token;
+
         if (!confirm("Are you sure you want to permanently delete this user?")) return;
         try {
             const res = await fetch("http://localhost:5000/api/admin/delete-user", {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();

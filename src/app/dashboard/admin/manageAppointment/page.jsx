@@ -10,23 +10,27 @@ export default function AdminAppointmentDashboard() {
     const [loading, setLoading] = useState(true);
 
     // ডাটাবেজের সব ডাটা একসাথে নিয়ে আসার ফাংশন
-    const fetchAllAppointments = () => {
-        setLoading(true);
-        fetch(`http://localhost:5000/api/appointments`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-            })
-            .then((data) => {
-                setAppointments(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error fetching admin data:", err);
-                toast.error("Failed to load appointments! ❌"); 
-                setLoading(false);
-            });
-    };
+  const fetchAllAppointments = async () => {
+    setLoading(true);
+    const tokenData = await authClient.token();
+
+    fetch(`http://localhost:5000/api/appointments`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+             authorization: `Bearer ${tokenData?.token}` 
+        }
+    })
+    .then((res) => res.json())
+    .then((data) => {
+        setAppointments(Array.isArray(data) ? data : []);
+        setLoading(false);
+    })
+    .catch((err) => {
+        console.error("Error:", err);
+        setLoading(false);
+    });
+};
 
     useEffect(() => {
         fetchAllAppointments();

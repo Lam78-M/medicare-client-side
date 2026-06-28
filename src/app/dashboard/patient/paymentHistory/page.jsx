@@ -10,12 +10,21 @@ const PaymentHistoryTable = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
+  useEffect(() => {
         const fetchPaymentHistory = async () => {
             if (!session?.user?.email) return;
             
             try {
-                const res = await fetch(`http://localhost:5000/api/appointments?email=${session.user.email}`);
+                const tokenData = await authClient.token();
+                const token = tokenData?.token;
+
+                const res = await fetch(`http://localhost:5000/api/appointments?email=${session.user.email}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                         authorization: `Bearer ${tokenData?.token}`
+                    }
+                });
                 const data = await res.json();
                 
                 if (Array.isArray(data)) {
@@ -36,7 +45,9 @@ const PaymentHistoryTable = () => {
         }
     }, [session, isSessionLoading]);
 
-    if (loading || isSessionLoading) {
+    if (loading || isSessionLoading)
+  
+    {
         return (
             <div className="flex justify-center items-center py-20 min-h-[300px]">
                 <Spinner size="lg" color="pink" label="Loading Payment History..." />

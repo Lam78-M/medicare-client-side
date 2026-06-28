@@ -48,8 +48,21 @@ export default function SignUpPage() {
 
     const { name, email, password, photoUrl } = formData;
 
+    // 1. Required fields check
     if (!name || !email || !password) {
       showToast("Please fill in all required fields!", "error");
+      setLoading(false);
+      return;
+    }
+
+    // 2. Strong Password Validation
+    // - (?=.*[0-9]): At least one number
+    // - (?=.*[!@#$%^&*(),.?":{}|<>]): At least one special character
+    // - .{6,}: At least 6 characters long
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>]).{6,}$/;
+
+    if (!passwordRegex.test(password)) {
+      showToast("Password must be at least 6 characters long, including at least one number and one special character!", "error");
       setLoading(false);
       return;
     }
@@ -71,7 +84,7 @@ export default function SignUpPage() {
       showToast("Account created successfully! Redirecting to dashboard... ✨");
       
       const userRole = data?.user?.role || role;
-       localStorage.setItem("user_role", role)
+      localStorage.setItem("user_role", role)
       setTimeout(() => {
         if (userRole === "admin") {
           router.push("/dashboard/admin");
@@ -99,7 +112,7 @@ export default function SignUpPage() {
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-     
+      
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#FFCEE3]/40 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#FF85BB]/15 rounded-full blur-[120px] pointer-events-none"></div>
 
@@ -119,7 +132,7 @@ export default function SignUpPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-     
+      
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Full Name</label>
             <div className="relative">
@@ -165,7 +178,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-    
+     
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Password</label>
             <div className="relative">
@@ -181,45 +194,44 @@ export default function SignUpPage() {
             </div>
           </div>
 
-<div className="flex flex-col gap-2">
-  <Label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1 pb-2">
-    Subscription Plan
-  </Label>
-  <RadioGroup onChange={value => setRole(value)} defaultValue="patient" name="role" orientation="horizontal" className="flex gap-4">
-    
-    {/* Starter */}
-    <Radio value="patient">
-      <Radio.Content>
-        <Radio.Control>
-          <Radio.Indicator  />
-        </Radio.Control>
-        <span className="text-sm font-bold text-[#021A54]">Patient</span>
-      </Radio.Content>
-    
-    </Radio>
+          <div className="flex flex-col gap-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1 pb-2">
+              Subscription Plan
+            </Label>
+            <RadioGroup onChange={value => setRole(value)} defaultValue="patient" name="role" orientation="horizontal" className="flex gap-4">
+              
+              {/* Starter */}
+              <Radio value="patient">
+                <Radio.Content>
+                  <Radio.Control>
+                    <Radio.Indicator  />
+                  </Radio.Control>
+                  <span className="text-sm font-bold text-[#021A54]">Patient</span>
+                </Radio.Content>
+              </Radio>
 
-    {/* Pro */}
-    <Radio value="doctors">
-      <Radio.Content>
-        <Radio.Control>
-          <Radio.Indicator  />
-        </Radio.Control>
-        <span className="text-sm font-bold text-[#021A54]">Doctors</span>
-      </Radio.Content>
-    </Radio>
+              {/* Pro */}
+              <Radio value="doctors">
+                <Radio.Content>
+                  <Radio.Control>
+                    <Radio.Indicator  />
+                  </Radio.Control>
+                  <span className="text-sm font-bold text-[#021A54]">Doctors</span>
+                </Radio.Content>
+              </Radio>
 
-    {/* Teams */}
-    <Radio value="admin">
-      <Radio.Content>
-        <Radio.Control>
-          <Radio.Indicator />
-        </Radio.Control>
-        <span className="text-sm font-bold text-[#021A54]">Admin</span>
-      </Radio.Content>
-    </Radio>
+              {/* Teams */}
+              <Radio value="admin">
+                <Radio.Content>
+                  <Radio.Control>
+                    <Radio.Indicator />
+                  </Radio.Control>
+                  <span className="text-sm font-bold text-[#021A54]">Admin</span>
+                </Radio.Content>
+              </Radio>
 
-  </RadioGroup>
-</div>
+            </RadioGroup>
+          </div>
 
           <motion.button
             whileHover={{ y: -2, boxShadow: "0px 10px 25px rgba(2, 26, 84, 0.15)" }}

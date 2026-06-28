@@ -1,24 +1,29 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-// 🌟 STEP 1: Tomar project-er Better Auth client instance import koro
-// Path-ta dhorlam "@/lib/auth-client" (Tomar prothone onno location hole thik kore nio)
 import { authClient } from "@/lib/auth-client"; 
-
 export default function AppointmentPage() {
-    // 🌟 STEP 2: Better Auth hook theke session data nilam
+ 
     const { data: session, isPending } = authClient.useSession();
-
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Better Auth jotokkhon loading line-e ache totokkhon logic break korbe na
-        if (isPending) return;
+useEffect(() => {
+    if (isPending) return;
 
-        // User login thakle tar email diye fetch korbe
-        if (session?.user?.email) {
-            fetch(`http://localhost:5000/api/appointments/patient?email=${session.user.email}`)
+    if (session?.user?.email) {
+        const fetchPatientData = async () => {
+            try {
+                const tokenData = await authClient.token();
+                const token = tokenData?.token;
+
+                fetch(`http://localhost:5000/api/appointments/patient?email=${session.user.email}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        authorization: `Bearer ${tokenData?.token}`
+                    }
+                })
                 .then((res) => res.json())
                 .then((data) => {
                     setAppointments(Array.isArray(data) ? data : []);
@@ -28,13 +33,19 @@ export default function AppointmentPage() {
                     console.error("Error fetching data:", err);
                     setLoading(false);
                 });
-        } else {
-            // User login na thakle loading false kore dibe layout blocker layer open thakar jonno
-            setLoading(false);
-        }
-    }, [session, isPending]); // Session load ba change hole trigger hobe
 
-    // Better Auth runtime pending checking or component fetch loader
+            } catch (tokenErr) {
+                console.error("Token error:", tokenErr);
+                setLoading(false);
+            }
+        };
+
+        fetchPatientData();
+    } else {
+        setLoading(false);
+    }
+}, [session, isPending]);
+   
     if (isPending || (loading && session)) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">

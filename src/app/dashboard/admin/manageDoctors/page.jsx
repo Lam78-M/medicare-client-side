@@ -1,5 +1,6 @@
 "use client";
 
+import { authClient } from "@/lib/auth-client";
 import React, { useState, useEffect } from "react";
 // 🎯 React Toastify ইমপোর্ট করা হলো
 import { ToastContainer, toast } from 'react-toastify';
@@ -11,25 +12,34 @@ export default function ManageDoctors() {
 
     // ডক্টর লিস্ট লোড করার ফাংশন
     const loadDoctors = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch("http://localhost:5000/api/admin/pending-doctors");
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setDoctors(data);
+    try {
+        setLoading(true);
+
+        // 🔑 Better Auth থেকে টোকেন নিলাম
+        const tokenData = await authClient.token();
+          const token = tokenData?.token;
+        const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${tokenData?.token}` 
             }
-        } catch (err) {
-            console.error("Error fetching data", err);
-        } finally {
-            setLoading(false);
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+            setDoctors(data);
         }
-    };
+    } catch (err) {
+        console.error("Error fetching data", err);
+    } finally {
+        setLoading(false);
+    }
+};
 
-    useEffect(() => {
-        loadDoctors();
-    }, []);
+useEffect(() => {
+    loadDoctors();
+}, []);
 
-    // 🎯 কাস্টম কালার টোস্ট নোটিফিকেশন ফাংশন (তোমার কালার প্যালেট থিমে)
     const showToast = (message, type = "success") => {
         const config = {
             position: "top-right",
@@ -59,9 +69,13 @@ export default function ManageDoctors() {
     // 🟢 Approve হ্যান্ডলার
     const handleApprove = async (id) => {
         try {
-            const res = await fetch("http://localhost:5000/api/admin/approve-doctor", {
+              const tokenData = await authClient.token();
+          const token = tokenData?.token;
+            const res = await fetch(`http://localhost:5000/api/admin/approve-doctor`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();
@@ -79,9 +93,13 @@ export default function ManageDoctors() {
     // 🟡 Cancel Verify হ্যান্ডলার
     const handleCancelVerify = async (id) => {
         try {
-            const res = await fetch("http://localhost:5000/api/admin/cancel-verify", {
+            const tokenData = await authClient.token()
+            const token = tokenData?.token;
+            const res = await fetch(`http://localhost:5000/api/admin/cancel-verify`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();
@@ -102,9 +120,13 @@ export default function ManageDoctors() {
         if (!confirm("Are you sure you want to reject this doctor's license?")) return;
 
         try {
-            const res = await fetch("http://localhost:5000/api/admin/reject-doctor", {
+              const tokenData = await authClient.token();
+              const token = tokenData?.token;
+            const res = await fetch(`http://localhost:5000/api/admin/reject-doctor`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify({ id })
             });
             

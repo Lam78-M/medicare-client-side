@@ -19,38 +19,60 @@ export default function AppointmentPage() {
     const [newDate, setNewDate] = useState('');
     const [newSlot, setNewSlot] = useState('');
 
-    const fetchAppointments = (email) => {
-        setLoading(true);
-        fetch(`http://localhost:5000/api/appointments/patient?email=${email}`)
-            .then((res) => res.json())
-            .then((data) => {
-                setAppointments(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error fetching data:", err);
-                toast.error("Failed to load clinical appointments! ❌"); 
-                setLoading(false);
-            });
-    };
+const fetchAppointments = async (email) => {
+    setLoading(true);
+    try {
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
 
-    useEffect(() => {
-        if (!isPending && session?.user?.email) {
-            fetchAppointments(session.user.email);
-        } else if (!isPending && !session) {
+        fetch(`http://localhost:5000/api/appointments/patient?email=${email}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then((res) => res.json())
+        .then((data) => {
+            setAppointments(Array.isArray(data) ? data : []);
             setLoading(false);
-        }
-    }, [session, isPending]);
+        })
+        .catch((err) => {
+            console.error("Error fetching data:", err);
+            toast.error("Failed to load clinical appointments! ❌"); 
+            setLoading(false);
+        });
+
+    } catch (tokenErr) {
+        console.error("Token error:", tokenErr);
+        setLoading(false);
+    }
+};
+
+useEffect(() => {
+    if (!isPending && session?.user?.email) {
+        fetchAppointments(session.user.email);
+    } else if (!isPending && !session) {
+        setLoading(false);
+    }
+}, [session, isPending]);
 
     const handleCancel = async (id) => {
         if (!id) return;
         
         if (!confirm("Are you sure you want to cancel this scheduled appointment session?")) return;
+           
+         try {
+    const tokenData = await authClient.token();
+    const token = tokenData?.token;
 
-        try {
-            const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
-                method: 'DELETE'
-            });
+    const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+             authorization: `Bearer ${tokenData?.token}`
+        }
+    });
             if (res.ok) {
                 // 🎉 Immediate dynamic Toast on successful cancellation
                 toast.success("Appointment successfully canceled! 🛑", {
@@ -101,9 +123,13 @@ export default function AppointmentPage() {
         };
 
         try {
+              const tokenData = await authClient.token();
+              const token = tokenData?.token;
             const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    authorization: `Bearer ${tokenData?.token}`
+                 },
                 body: JSON.stringify(updatedPayload)
             });
 

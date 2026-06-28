@@ -15,8 +15,7 @@ export default function PatientFeedbackPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
-  // 🎯 STEP 1: Fetching Unique Booked Doctors List
-  useEffect(() => {
+ useEffect(() => {
     const fetchMyBookedDoctors = async () => {
       try {
         const session = await authClient.getSession();
@@ -26,24 +25,42 @@ export default function PatientFeedbackPage() {
           return;
         }
 
-        // 📧 Better Auth থেকে পেশেন্টের Email নেওয়া হচ্ছে
         const patientEmail = session.data.user.email; 
 
-        // 📡 ব্যাকএন্ড রুটে 'patientEmail' পাস করা হচ্ছে
-        const response = await fetch(`http://localhost:5000/api/v1/patient-appointments/${patientEmail}`);
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
+        console.log("🚀 ১ নম্বর (Main) এপিআই-তে রিকোয়েস্ট পাঠানো হচ্ছে...");
+        const response = await fetch(`http://localhost:5000/api/v1/patient-appointments/${patientEmail}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer${tokenData?.token}`
+            }
+        });
         const resData = await response.json();
         
         console.log("🔍 UNIQUE DOCTORS IN FRONTEND:", resData);
 
         if (resData.success && Array.isArray(resData.doctors)) {
+          console.log("✅ সফল! ১ নম্বর (Main) রুট থেকে ডাটা পাওয়া গেছে।");
           setBookedDoctors(resData.doctors);
         } else {
-          // 🔄 ব্যাকআপ রুট ট্রাই করা হচ্ছে
-          const backupRes = await fetch(`http://localhost:5000/api/appointments/patient?email=${patientEmail}`);
+    
+          console.log("⚠️ ১ নম্বর রুট কাজ করেনি। এবার ২ নম্বর (Backup) রুটে ট্রাই করছি...");
+           const tokenData = await authClient.token();
+        const token = tokenData?.token;
+          const backupRes = await fetch(`http://localhost:5000/api/appointments/patient?email=${patientEmail}`, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                   authorization: `Bearer${tokenData?.token}`
+              }
+          });
           const backupData = await backupRes.json();
           
           if (Array.isArray(backupData)) {
-            // ডাটাবেজের অবজেক্ট স্ট্রাকচার থেকে নিখুঁতভাবে ম্যাপ করে নেওয়া হলো
+            console.log("✅ সফল! ২ নম্বর (Backup) রুট থেকে ডাটা পাওয়া গেছে।");
+         
             const formattedDocs = backupData.map(item => ({
               doctorId: item.doctorId || item._id || item.id,
               doctorName: item.doctorName || item.name,
@@ -67,7 +84,7 @@ export default function PatientFeedbackPage() {
     fetchMyBookedDoctors();
   }, []);
 
-  // 🎯 STEP 2: Main payload submission callback layout
+  //  STEP 2: Main payload submission callback layout
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,9 +110,15 @@ export default function PatientFeedbackPage() {
         createdAt: new Date()
       };
 
-      const response = await fetch("http://localhost:5000/api/v1/reviews", {
+   const tokenData = await authClient.token();
+        const token = tokenData?.token;
+
+      const response = await fetch(`http://localhost:5000/api/v1/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+          authorization: `Bearer${tokenData?.token}`
+          
+         },
         body: JSON.stringify(reviewPayload),
       });
 
@@ -146,7 +169,6 @@ export default function PatientFeedbackPage() {
                   const currentSelectedDocId = e.target.value;
                   setSelectedDoctorId(currentSelectedDocId);
                   
-                  // 🔥 এখানে আইডি চেক করার কন্ডিশন ফিক্স করা হয়েছে যেন ডাটাবেজের যেকোনো কী ম্যাচ করে
                   const targetDocObject = bookedDoctors.find(d => 
                     String(d.doctorId || d.id || d._id) === String(currentSelectedDocId)
                   );
@@ -159,7 +181,7 @@ export default function PatientFeedbackPage() {
               >
                 <option value="">-- Choose From Your Doctors List --</option>
                 {bookedDoctors && bookedDoctors.map((item, index) => {
-                  // 🔥 ব্যাকএন্ড অবজেক্টের সব ধরণের সম্ভাব্য 'Key' হ্যান্ডেল করা হয়েছে এখানে
+               
                   const currentId = item.doctorId || item.id || item._id || index;
                   const currentName = item.doctorName || item.name || "Unknown Doctor";
                   

@@ -15,51 +15,69 @@ export default function DoctorAppointmentPage() {
     const { data: session, isPending } = authClient.useSession();
     const doctorEmail = session?.user?.email;
 
-    // 🔄 Fetch Doctor's Specific Appointments
-    const fetchAppointments = () => {
-        if (!doctorEmail) {
-            console.log("❌ Better Auth থেকে এখনও কোনো ইমেইল পাওয়া যায়নি!");
-            return;
-        }
-        
-        setLoading(true);
-        const cleanedEmail = doctorEmail.trim().toLowerCase();
+const fetchAppointments = async () => {
+    if (!doctorEmail) {
+        console.log("❌ Better Auth থেকে এখনও কোনো ইমেইল পাওয়া যায়নি!");
+        return;
+    }
+    
+    setLoading(true);
+    const cleanedEmail = doctorEmail.trim().toLowerCase();
 
-        // ব্যাকএন্ডে ডক্টরের ইমেল কুয়েরি পাঠানো হচ্ছে
-        fetch(`http://localhost:5000/api/appointments/doctor?email=${cleanedEmail}`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-            })
-            .then((data) => {
-                setAppointments(Array.isArray(data) ? data : []);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error("Error fetching data:", err);
-                setLoading(false);
-            });
-    };
+    try {
+        const tokenData = await authClient.token();
+        const token = tokenData?.token;
 
-    useEffect(() => {
-        if (doctorEmail) {
-            fetchAppointments();
-        }
-    }, [doctorEmail]);
+        fetch(`http://localhost:5000/api/appointments/doctor?email=${cleanedEmail}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                authorization: `Bearer ${token}`
+            }
+        })
+        .then((res) => {
+            if (!res.ok) throw new Error("Network response was not ok");
+            return res.json();
+        })
+        .then((data) => {
+            setAppointments(Array.isArray(data) ? data : []);
+            setLoading(false);
+        })
+        .catch((err) => {
+            console.error("Error fetching data:", err);
+            setLoading(false);
+        });
 
-    // ✅ Approve Appointment Handler
+    } catch (tokenErr) {
+        console.error("Error fetching token:", tokenErr);
+        setLoading(false);
+    }
+};
+
+useEffect(() => {
+    if (doctorEmail) {
+        fetchAppointments();
+    }
+}, [doctorEmail]);
+
+   
     const handleApprove = async (id) => {
         try {
+            const tokenData = await authClient.token();
+        const token = tokenData?.token;
+
             const res = await fetch(`http://localhost:5000/api/appointments/approve/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json',
+                     authorization: `Bearer ${token}`
+                 }
             });
             
             const data = await res.json();
 
             if (res.ok && data.success) {
                 toast.success("Appointment Approved! 🎉");
-                fetchAppointments(); // ডাটা রিফ্রেশ করবে সাথে সাথে
+                fetchAppointments(); 
             } else {
                 toast.error(data.message || "Failed to approve appointment. ⚠️");
             }
@@ -69,23 +87,49 @@ export default function DoctorAppointmentPage() {
         }
     };
 
-    // 🛑 STRICT CLIENT-SIDE DOCTOR FILTER MATRIX
-    // এই লজিকটি গ্যারান্টি দেয় যে ডাটাবেজ থেকে কোনো ভুল ডাটা আসলেও লগইন থাকা ডক্টরের ইমেইলের বাইরের কেউ এটা দেখতে পাবে না।
+    const handleDelete = async (id) => {
+
+        if (!window.confirm("Are you sure you want to cancel/delete this appointment? ⚠️")) {
+            return;
+        }
+
+        try {
+            const tokenData = await authClient.token();
+        const token = tokenData?.token;
+            const res = await fetch(`http://localhost:5000/api/appointments/delete/${id}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json',
+                     authorization: `Bearer ${token}`
+                 }
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                toast.error("Appointment Cancelled & Deleted! 🗑️");
+                fetchAppointments(); 
+            } else {
+                toast.error(data.message || "Failed to delete appointment.");
+            }
+        } catch (error) {
+            console.error("Delete error:", error);
+            toast.error("Network connection error! 🌐");
+        }
+    };
+
     const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
     
     const myFilteredAppointments = appointments.filter(app => {
         if (!app) return false;
         
-        // তোমার ডাটা অবজেক্ট অনুযায়ী 'doctorEmail' ফিল্ডটি চেক করা হচ্ছে
         const appDoctorEmail = app.doctorEmail || app.doctor_email || app.email;
         
         if (appDoctorEmail && currentDoctorEmail) {
             return appDoctorEmail.trim().toLowerCase() === currentDoctorEmail;
         }
-        return false; // যদি ইমেইল ম্যাচ না করে তবে ড্যাশবোর্ড থেকে হাইড থাকবে
+        return false; 
     });
 
-    // 📊 dynamic Pending Requests Counter cards
     const pendingCount = myFilteredAppointments.filter(app => app.status !== "Approved").length;
 
     if (isPending || (loading && doctorEmail)) {
@@ -155,7 +199,6 @@ export default function DoctorAppointmentPage() {
                         </Card>
                     ) : (
                         myFilteredAppointments.map((appointment, index) => {
-                            // 🔍 তোমার মঙ্গোডিবি ডাটা অবজেক্ট স্ট্রাকচার ($oid) হ্যান্ডেল করার সেফটি রুল
                             const appId = appointment?._id?.$oid || appointment?._id;
                             const uniqueKey = appId || `app-key-${index}`;
                             const isApproved = appointment.status === 'Approved';
@@ -202,8 +245,19 @@ export default function DoctorAppointmentPage() {
                                             </div>
                                         </div>
 
-                                        {/* Right Side: Action Buttons */}
-                                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end ml-auto lg:ml-0">
+                                        {/* Right Side: Action Buttons (Approve / Prescribe & Cancel) */}
+                                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end ml-auto lg:ml-0">
+                                            
+                                            {/* ডিলিট / ক্যানসেল বাটন (যেকোনো স্ট্যাটাসেই ডাক্তার ডিলিট করতে পারবেন) */}
+                                            <Button 
+                                                size="sm"
+                                                variant="light"
+                                                onClick={() => handleDelete(appId)}
+                                                className="text-red-500 hover:bg-red-50 font-bold text-xs rounded-xl px-3 py-4 transition-all"
+                                            >
+                                                Cancel ❌
+                                            </Button>
+
                                             {!isApproved ? (
                                                 <Button 
                                                     size="sm" 
@@ -213,7 +267,6 @@ export default function DoctorAppointmentPage() {
                                                     Approve ✅
                                                 </Button>
                                             ) : (
-                                                /* 🎯 FIX: এখানে এবার 'appId' এবং 'patientName' উভয়কেই URL-এ পাঠানো হচ্ছে */
                                                 <Link
                                                     href={`/dashboard/doctors/prescription?appId=${encodeURIComponent(appId)}&patientName=${encodeURIComponent(appointment.patientName || appointment.userName || "Unknown Patient")}`}
                                                     className="bg-[#021A54] text-white font-bold text-xs rounded-xl px-4 py-2.5 hover:opacity-90 flex items-center justify-center transition-all shadow-sm"
