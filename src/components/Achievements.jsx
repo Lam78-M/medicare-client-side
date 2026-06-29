@@ -25,7 +25,7 @@ export default function HomeStatsOverview() {
       try {
         // ১. ডক্টর ডাটা ফেচ
         try {
-          const docRes = await fetch(`http://localhost:5000/api/doctors`, { cache: 'no-store' });
+          const docRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors`, { cache: 'no-store' });
           if (docRes.ok) {
             const docData = await docRes.json();
             if (Array.isArray(docData)) dCount = docData.length;
@@ -34,7 +34,7 @@ export default function HomeStatsOverview() {
 
         // ২. অ্যাপয়েন্টমেন্ট ডাটা ফেচ
         try {
-          const appRes = await fetch(`http://localhost:5000/api/appointments`, { cache: 'no-store' });
+          const appRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments`, { cache: 'no-store' });
           if (appRes.ok) {
             const appData = await appRes.json();
             if (Array.isArray(appData)) aCount = appData.length;
@@ -43,7 +43,7 @@ export default function HomeStatsOverview() {
 
         // ৩. একটিভ ইউজার ডাটা ফেচ
         try {
-          const userRes = await fetch(`http://localhost:5000/api/admin/all-users`, { cache: 'no-store' });
+          const userRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/all-users`, { cache: 'no-store' });
           if (userRes.ok) {
             const userData = await userRes.json();
             if (Array.isArray(userData)) {
@@ -57,7 +57,7 @@ export default function HomeStatsOverview() {
 
         // ৪. গ্লোবাল রিভিউ ডাটা ফেচ
         try {
-          const reviewRes = await fetch(`http://localhost:5000/api/v1/reviews`, { cache: 'no-store' });
+          const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews`, { cache: 'no-store' });
           if (reviewRes.ok) {
             const reviewData = await reviewRes.json();
             if (Array.isArray(reviewData)) {

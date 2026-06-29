@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Chip, Spinner, Avatar, Input } from "@heroui/react";
-import { authClient } from "@/lib/auth-client"; // Better Auth Client
+import { authClient } from "@/lib/auth-client"; 
 import { toast } from 'react-toastify'; 
 
 const DoctorDetailPage = () => {
@@ -11,10 +11,9 @@ const DoctorDetailPage = () => {
     const [doctor, setDoctor] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // 🔒 Correct way to get Session in Client Component using Better Auth Hook
+
     const { data: session, isPending: isSessionLoading } = authClient.useSession();
 
-    // Booking Form States
     const [selectedDay, setSelectedDay] = useState('');
     const [selectedSlot, setSelectedSlot] = useState('');
     const [selectedDate, setSelectedDate] = useState(''); 
@@ -41,7 +40,7 @@ const DoctorDetailPage = () => {
                   const tokenResponse = await authClient.token();
                 setTokenData(tokenResponse?.data);
 
-                const res = await fetch(`http://localhost:5000/api/doctors/${id}`,{
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors/${id}`,{
                     headers:{
                        authorization: `Bearer ${tokenResponse?.data?.token}`
                     }
@@ -251,8 +250,6 @@ const DoctorDetailPage = () => {
                             )}
                         </div>
 
-                        {/* Form Submission Execution */}
-                  {/* //// 📅 APPOINTMENT BOOKING FORM SYSTEM WITH STRIPE CHECKOUT */}
 <form 
     onSubmit={async (e) => {
         e.preventDefault(); 
@@ -293,7 +290,7 @@ const DoctorDetailPage = () => {
         setBookingLoading(true);
         try {
             // STEP 1: Save appointment data inside your Database
-            const response = await fetch('http://localhost:5000/api/appointments', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingData)
@@ -311,7 +308,7 @@ const DoctorDetailPage = () => {
                     body: JSON.stringify({
                         doctorName: doctor.doctorName,
                         consultationFee: doctor.consultationFee,
-                        appointmentId: databaseResult._id || databaseResult.insertedId, // Use your DB record target reference
+                        appointmentId: databaseResult._id || databaseResult.insertedId,
                         userEmail: currentUser.email
                     })
                 });
@@ -362,7 +359,7 @@ const DoctorDetailPage = () => {
                                     </p>
                                 </div>
                                 
-                                {/* 🛠️ Fix: Disabled button if user is doctor or admin */}
+                             
                                 <Button 
     type="submit"
     isDisabled={isRestrictedRole}

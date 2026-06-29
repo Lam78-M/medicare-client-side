@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Mail, Lock,  ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, Stethoscope } from "lucide-react"; 
 import { authClient } from "@/lib/auth-client"; 
 import { FaGoogle } from "react-icons/fa";
 
@@ -67,7 +67,6 @@ export default function SignInPage() {
       const loggedInRole = data?.user?.role || "patient"; 
       localStorage.setItem("user_role", loggedInRole);
 
-      // dynamic redirect for different
       setTimeout(() => {
         if (loggedInRole === "admin") {
           router.push("/dashboard/admin");
@@ -86,14 +85,12 @@ export default function SignInPage() {
     }
   };
 
-  //  Better Auth google redirect
   const handleGoogleSignIn = async () =>{
     await authClient.signIn.social({
       provider: "google",
       callbackURL: "/"
     })
   }
-
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
@@ -107,20 +104,41 @@ export default function SignInPage() {
         transition={{ type: "spring", stiffness: 90, damping: 14 }}
         className="w-full max-w-lg bg-white/60 backdrop-blur-xl border border-white/80 rounded-[32px] p-8 md:p-10 shadow-[0_25px_50px_-12px_rgba(2,26,84,0.08)] relative z-10"
       >
-        <div className="text-center space-y-2 mb-8">
+        <div className="text-center space-y-2 mb-6">
           <h2 className="text-3xl md:text-4xl font-black text-[#021A54] tracking-tight">
-            Welcome <span className="text-[#FF85BB]">Back</span>
+            Welcome <span className="text-[#FF8BB]">Back</span>
           </h2>
           <p className="text-slate-500 font-semibold text-sm">
             Sign in to access your secure medical portal
           </p>
         </div>
 
+        {/* 🩺 🎯 ডাক্তারদের ডেমো লগইন ক্রেডেনশিয়াল বক্স */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6 bg-gradient-to-r from-[#021A54]/5 to-[#FF85BB]/5 border border-[#FF85BB]/20 p-4 rounded-2xl flex items-start gap-3"
+        >
+          <div className="p-2 bg-[#021A54] text-white rounded-xl shadow-md mt-0.5 shrink-0">
+            <Stethoscope size={18} />
+          </div>
+          <div className="space-y-1 w-full">
+            <h4 className="text-xs font-bold text-[#021A54] uppercase tracking-wide">Doctor Demo Account info</h4>
+            <div className="text-xs font-medium text-slate-600 space-y-1 bg-white/50 p-2 rounded-xl border border-slate-100 mt-1">
+              <div className="text-sm"><span className="font-bold text-[#021A54] ">Email:</span > 1. niaz.chowdhury@medicare.com  <br></br>
+                                                             2. kamrul.rony@medicare.com
+              </div> 
+              <div><span className="font-bold text-[#021A54] text-sm">Password:</span>123Door26#</div>
+            </div>
+          </div>
+        </motion.div>
+
         <form onSubmit={handleSubmit} className="space-y-5">
        
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Email Address</label>
-            <div className="relative">
+            <div className="relative">   
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="email"
@@ -133,7 +151,6 @@ export default function SignInPage() {
             </div>
           </div>
 
-       
           <div className="space-y-1.5">
             <div className="flex justify-between items-center px-1">
               <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80">Password</label>

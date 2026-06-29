@@ -13,7 +13,7 @@ export default function TopThreeReviewsPage() {
         const fetchReviews = async () => {
             try {
                 const res = await fetch(
-                    "http://localhost:5000/api/v1/reviews"
+                    `${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews`
                 );
 
                 if (!res.ok) {

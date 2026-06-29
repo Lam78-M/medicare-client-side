@@ -17,7 +17,7 @@ useEffect(() => {
                 const tokenData = await authClient.token();
                 const token = tokenData?.token;
 
-                fetch(`http://localhost:5000/api/appointments/patient?email=${session.user.email}`, {
+                fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/patient?email=${session.user.email}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

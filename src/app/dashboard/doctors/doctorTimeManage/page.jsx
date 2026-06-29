@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Button, Input, Spinner } from "@heroui/react";
 import { authClient } from "@/lib/auth-client"; 
-// 🎯 ToastContainer এবং CSS ফাইল সরাসরি এখানেই ইমপোর্ট করা হয়েছে
+
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -68,7 +68,7 @@ const UpdateSchedulePage = () => {
         setSlots(slots.filter((_, index) => index !== indexToRemove));
     };
 
-    // 🚀 ক্লিন সাবমিট ফাংশন (কোনো হ্যাক বা ডিলে ছাড়া)
+
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         
@@ -93,7 +93,7 @@ const UpdateSchedulePage = () => {
                 availableSlots: slots
             };
 
-            const response = await fetch(`http://localhost:5000/api/doctors/update-schedule-by-email`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors/update-schedule-by-email`, {
                 method: 'PATCH', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatePayload)
@@ -232,7 +232,7 @@ const UpdateSchedulePage = () => {
                 </form>
             </Card>
 
-            {/* 🎯 এই পেজের জন্য একদম লোকাল টোস্ট কনটেইনার—এবার টোস্ট আসতেই হবে */}
+
             <ToastContainer position="top-right" autoClose={3000} />
         </div>
     );

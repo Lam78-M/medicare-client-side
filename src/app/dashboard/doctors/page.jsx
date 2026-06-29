@@ -22,7 +22,7 @@ useEffect(() => {
                const tokenData = await authClient.token();
             const token = tokenData?.token;
             setLoadingReviews(true);
-            const response = await fetch(`http://localhost:5000/api/v1/reviews`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ useEffect(() => {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            fetch(`http://localhost:5000/api/appointments/doctor?email=${cleanedEmail}`, {
+            fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/doctor?email=${cleanedEmail}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

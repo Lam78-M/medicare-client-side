@@ -20,7 +20,7 @@ const FeaturedDoctors = () => {
         const fetchFeaturedData = async () => {
             setLoading(true);
             try {
-                let url = `http://localhost:5000/api/doctors?status=Approved`;
+                let url = `${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors?status=Approved`;
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -58,7 +58,7 @@ const FeaturedDoctors = () => {
             const targetUrl = `/doctors`;
 
             // 🚀 সাইনআপ পেজে পাঠানোর সময় callbackUrl হিসেবে টার্গেট পাথটি জুড়ে দিলাম
-            router.push(`/auth/signup?callbackUrl=${encodeURIComponent(targetUrl)}`);
+            router.push(`/auth/signin?callbackUrl=${encodeURIComponent(targetUrl)}`);
         }
     };
 

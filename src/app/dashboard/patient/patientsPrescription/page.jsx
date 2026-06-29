@@ -9,7 +9,7 @@ export default function PatientPrescriptionPage() {
 
     const { data: session, isPending: authPending } = authClient.useSession();
     
-    // 🎯 ট্রিক: ইমেইল যেহেতু নেই, আমরা লগইন থাকা রোগীর নাম দিয়ে ফিল্টার করার চেষ্টা করব
+
     const patientNameFromSession = session?.user?.name; 
 
     const fetchPrescriptions = async () => {
@@ -17,7 +17,7 @@ export default function PatientPrescriptionPage() {
             setLoading(true);
             
             const tokenData = await authClient.token(); 
-            const response = await fetch("http://localhost:5000/api/prescriptions/all", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/prescriptions/all`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -43,18 +43,16 @@ export default function PatientPrescriptionPage() {
         }
     }, [authPending, session]);
 
-    // 🎯 রোগীর নাম দিয়ে ফিল্টারিং লজিক (নামের চারপাশের স্পেস বা ছোট-বড় হাতের অক্ষর ফিক্স করে নেবে)
+
     const myFilteredPrescriptions = prescriptionsList.filter((pres) => {
         if (!pres) return false;
 
-        // যদি লগইন থাকা ইউজারের নাম এবং প্রেসক্রিপশনের রোগীর নাম মিলে যায়
+     
         if (pres.patientName && patientNameFromSession) {
             return pres.patientName.trim().toLowerCase() === patientNameFromSession.trim().toLowerCase();
         }
         
-        // 🛠️ ব্যাকআপ ট্রিক: যদি সেশনের নাম ডাটাবেজের সাথে হুবহু না মিলে (যেমন বানানের গণ্ডগোল), 
-        // এবং তোমার টেস্টিং একাউন্টের নাম "Ayat lam" হয়, তবে নিচের কমেন্টটি আনকমেন্ট (Uncomment) করে দিতে পারো:
-        // if (pres.patientName === "Ayat lam") return true;
+
 
         return false; 
     });

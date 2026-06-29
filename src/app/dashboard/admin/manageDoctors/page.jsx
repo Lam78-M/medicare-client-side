@@ -18,7 +18,7 @@ export default function ManageDoctors() {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/pending-doctors`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export default function ManageDoctors() {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/admin/approve-doctor`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/approve-doctor`, {
                 method: "PUT",
                 headers: { 
                     "Content-Type": "application/json",
@@ -101,7 +101,7 @@ export default function ManageDoctors() {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/admin/cancel-verify`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/cancel-verify`, {
                 method: "PUT",
                 headers: { 
                     "Content-Type": "application/json",
@@ -123,7 +123,7 @@ export default function ManageDoctors() {
         }
     };
 
-    // 🔴 Reject License হ্যান্ডলার
+    //  Reject License 
     const handleRejectLicense = async (id) => {
         if (!confirm("Are you sure you want to reject this doctor's license?")) return;
 
@@ -131,7 +131,7 @@ export default function ManageDoctors() {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/admin/reject-doctor`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/reject-doctor`, {
                 method: "DELETE",
                 headers: { 
                     "Content-Type": "application/json",
@@ -176,7 +176,7 @@ export default function ManageDoctors() {
                         <p className="text-gray-400 font-medium">🎉 No pending verification requests found.</p>
                     </div>
                 ) : (
-                    /* 🗂️ কাস্টম কার্ড গ্রিড লেআউট */
+                
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {doctors.map((doc) => {
                             const isApproved = doc.verificationStatus?.toLowerCase() === "verified";
@@ -186,7 +186,7 @@ export default function ManageDoctors() {
                                     key={doc._id} 
                                     className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between group"
                                 >
-                                    {/* কার্ড বডি (ডিটেইলস) */}
+                            
                                     <div className="mb-5">
                                         <div className="flex justify-between items-start mb-3">
                                             <h3 className="font-extrabold text-lg text-[#021A54] group-hover:text-[#FF85BB] transition-colors duration-300">
@@ -203,7 +203,7 @@ export default function ManageDoctors() {
                                             </span>
                                         </div>
                                         
-                                        {/* বিস্তারিত ইনফরমেশন */}
+                                 
                                         <div className="space-y-1.5 text-xs font-semibold text-gray-500 border-t border-gray-50 pt-3">
                                             <p>🩺 <span className="text-gray-700">Specialization:</span> {doc.specialization}</p>
                                             <p>🏢 <span className="text-gray-700">Hospital:</span> {doc.hospitalName}</p>
@@ -212,10 +212,10 @@ export default function ManageDoctors() {
                                         </div>
                                     </div>
 
-                                    {/* ⚙️ বাটন কন্ট্রোল (Tailwind দিয়ে হোভার ইফেক্ট ঠিক করা হয়েছে) */}
+                   
                                     <div className="grid grid-cols-2 gap-3 border-t border-gray-50 pt-4">
                                         {isApproved ? (
-                                            /* ১. ভেরিফাইড হয়ে গেলে দেখাবে: Cancel Verify */
+                                    
                                             <button 
                                                 onClick={() => handleCancelVerify(doc._id)}
                                                 className="text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200 bg-[#FFCEE3] text-[#021A54] hover:bg-[#FF85BB] hover:text-white"
@@ -223,7 +223,7 @@ export default function ManageDoctors() {
                                                 Cancel Verify ↩️
                                             </button>
                                         ) : (
-                                            /* ২. নরমাল অবস্থায় দেখাবে: Approve */
+                                     
                                             <button 
                                                 onClick={() => handleApprove(doc._id)}
                                                 className="text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200 bg-[#021A54] hover:bg-[#FF85BB]"
@@ -232,7 +232,6 @@ export default function ManageDoctors() {
                                             </button>
                                         )}
 
-                                        {/* ৩. Reject License বাটন */}
                                         <button 
                                             onClick={() => handleRejectLicense(doc._id)}
                                             className="border border-red-500 text-red-600 hover:bg-red-600 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all duration-200 cursor-pointer text-center active:scale-95"

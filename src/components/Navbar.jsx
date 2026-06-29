@@ -172,7 +172,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link href="/auth/signup" className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm tracking-wide">
+              <Link href="/auth/signin" className="bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md active:scale-95 text-sm tracking-wide">
                 Login / Register
               </Link>
             )}
@@ -226,7 +226,7 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link href="/auth/signup" onClick={() => setIsOpen(false)} className="block text-center bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 text-sm tracking-wide">
+              <Link href="/auth/signin" onClick={() => setIsOpen(false)} className="block text-center bg-[#FF85BB] hover:bg-[#FF85BB]/90 text-white font-bold py-3 rounded-xl shadow-md transition active:scale-95 text-sm tracking-wide">
                 Login / Register
               </Link>
             )}

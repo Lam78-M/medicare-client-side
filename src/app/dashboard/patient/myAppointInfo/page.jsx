@@ -25,7 +25,7 @@ const fetchAppointments = async (email) => {
         const tokenData = await authClient.token();
         const token = tokenData?.token;
 
-        fetch(`http://localhost:5000/api/appointments/patient?email=${email}`, {
+        fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/patient?email=${email}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ useEffect(() => {
     const tokenData = await authClient.token();
     const token = tokenData?.token;
 
-    const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ useEffect(() => {
         try {
               const tokenData = await authClient.token();
               const token = tokenData?.token;
-            const res = await fetch(`http://localhost:5000/api/appointments/${id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json',
                     authorization: `Bearer ${tokenData?.token}`

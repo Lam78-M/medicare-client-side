@@ -13,8 +13,8 @@ const AdminPaymentHistoryTable = () => {
     useEffect(() => {
         const fetchAllPaymentHistory = async () => {
             try {
-                // 🎯 গ্লোবাল API হিট করা হচ্ছে যাতে সব পেশেন্টের পেমেন্ট ডাটা অ্যাডমিন দেখতে পায়
-                const res = await fetch(`http://localhost:5000/api/appointments`);
+         
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments`);
                 const data = await res.json();
                 
                 if (Array.isArray(data)) {
@@ -33,7 +33,6 @@ const AdminPaymentHistoryTable = () => {
         fetchAllPaymentHistory();
     }, []);
 
-    // মোট কত টাকা বিনিময় হলো তা হিসাব করার মেকানিজম
     const totalRevenue = appointments.reduce((sum, app) => sum + (Number(app.consultationFee) || 0), 0);
 
     if (loading) {
@@ -48,14 +47,14 @@ const AdminPaymentHistoryTable = () => {
         <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm mt-8">
             <ToastContainer />
             
-            {/* অ্যাডমিন পেমেন্ট ট্র্যাকিং হেডার */}
+        
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 px-2">
                 <div>
                     <h3 className="text-2xl font-black text-[#021A54]">📊 Global Payment Tracker</h3>
                     <p className="text-xs text-gray-400 font-medium">Monitoring the financial exchange and consultation fees between patients and doctors.</p>
                 </div>
                 
-                {/* সর্বমোট ফি বিনিময়ের কাউন্টার চিপ */}
+         
                 <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3 flex gap-4">
                     <div className="text-left">
                         <span className="text-[10px] text-gray-400 font-bold block uppercase tracking-wider">Total Volume</span>
@@ -68,7 +67,7 @@ const AdminPaymentHistoryTable = () => {
                 </div>
             </div>
 
-            {/* 🔄 📱 রেস্পনসিভ স্ক্রোল কন্টেইনার (মোবাইলে স্লাইড করার জন্য) */}
+  
             <div className="overflow-x-auto w-full rounded-2xl border border-gray-100 scrollbar-thin scrollbar-thumb-gray-200">
                 <table className="w-full text-left border-collapse bg-white min-w-[900px]">
                     <thead>
@@ -96,7 +95,7 @@ const AdminPaymentHistoryTable = () => {
                                 return (
                                     <tr key={currentId} className="hover:bg-gray-50/50 transition-colors duration-150">
                                         
-                                        {/* ১. পেশেন্টের ডিটেইলস */}
+                           
                                         <td className="p-4 whitespace-nowrap">
                                             <div className="font-extrabold text-gray-800 text-sm">
                                                 👤 {appointment.userName || "Anonymous Patient"}
@@ -106,7 +105,7 @@ const AdminPaymentHistoryTable = () => {
                                             </div>
                                         </td>
 
-                                        {/* ২. ডক্টরের ছবি ও নাম */}
+                   
                                         <td className="p-4 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
                                                 <div className="relative border border-pink-100 rounded-xl overflow-hidden w-9 h-9 min-w-[36px] bg-gray-50 flex items-center justify-center">
@@ -130,14 +129,13 @@ const AdminPaymentHistoryTable = () => {
                                             </div>
                                         </td>
 
-                                        {/* ৩. স্পেশালাইজেশন চিপ */}
+                               
                                         <td className="p-4 whitespace-nowrap">
                                             <span className="text-[10px] font-black text-[#021A54] bg-[#FFCEE3] px-2.5 py-1 rounded-full uppercase tracking-wide">
                                                 {appointment.specialization || "General"}
                                             </span>
                                         </td>
 
-                                        {/* ৪. অ্যাপয়েন্টমেন্ট তারিখ ও সময় */}
                                         <td className="p-4 whitespace-nowrap">
                                             <div className="flex flex-col">
                                                 <p className="text-sm font-bold text-gray-700">🗓️ {appointment.appointmentDate}</p>
@@ -145,14 +143,14 @@ const AdminPaymentHistoryTable = () => {
                                             </div>
                                         </td>
 
-                                        {/* ৫. কনসালটেশন ফি */}
+                                  
                                         <td className="p-4 whitespace-nowrap">
                                             <p className="text-sm font-black text-[#FF85BB]">
                                                 ৳ {appointment.consultationFee || 0}
                                             </p>
                                         </td>
 
-                                        {/* ৬. গেটওয়ে পেমেন্ট স্ট্যাটাস */}
+                                 
                                         <td className="p-4 whitespace-nowrap">
                                             <Chip
                                                 className="capitalize font-black text-[10px] px-2 py-0.5 rounded-xl border border-green-200"
@@ -164,7 +162,7 @@ const AdminPaymentHistoryTable = () => {
                                             </Chip>
                                         </td>
 
-                                        {/* ৭. সিস্টেম অ্যাকশন বাটন */}
+                                 
                                         <td className="p-4 text-center whitespace-nowrap">
                                             <Button
                                                 size="sm"

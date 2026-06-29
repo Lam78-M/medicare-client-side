@@ -21,7 +21,7 @@ export default function DoctorStats() {
         const actualPatientId = session.user.id || session.user._id;
 
         // 1. Fetch Patient Appointments
-        const res = await fetch(`http://localhost:5000/api/appointments/patient?email=${userEmail}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/patient?email=${userEmail}`);
         if (res.ok) {
           const appointmentData = await res.json();
           setAppointments(Array.isArray(appointmentData) ? appointmentData : []);
@@ -30,7 +30,7 @@ export default function DoctorStats() {
         // 2. Fetch Given Reviews
         if (actualPatientId) {
           console.log("Frontend sending Patient ID:", actualPatientId);
-          const reviewRes = await fetch(`http://localhost:5000/api/v1/reviews/patient/${actualPatientId}`);
+          const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews/patient/${actualPatientId}`);
           
           if (reviewRes.ok) {
             const reviewData = await reviewRes.json();
@@ -40,13 +40,13 @@ export default function DoctorStats() {
           }
         } else {
           console.log("Session ID missing, checking from appointments...");
-          const resCheck = await fetch(`http://localhost:5000/api/appointments/patient?email=${userEmail}`);
+          const resCheck = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/patient?email=${userEmail}`);
           if (resCheck.ok) {
             const data = await resCheck.json();
             const fallbackId = data.find(app => app?.patientId)?.patientId;
             
             if (fallbackId) {
-              const reviewRes = await fetch(`http://localhost:5000/api/v1/reviews/patient/${fallbackId}`);
+              const reviewRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews/patient/${fallbackId}`);
               const reviewData = await reviewRes.json();
               if (reviewData.success) setGivenReviewCount(reviewData.reviews.length);
             }

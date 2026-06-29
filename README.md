@@ -9,7 +9,7 @@ MediCare Connect is a modern, full-stack healthcare ecosystem designed to bridge
 
 ### 🔑 Demo Admin Credentials
 *   **Email:** `admin@medicare.com` *(Or your specific admin email)*
-*   **Password:** `Admin@1234` *(Or your specific admin password)*
+*   **Password:** `123Door26#` *(Or your specific admin password)*
 
 ---
 

@@ -18,7 +18,7 @@ const PaymentHistoryTable = () => {
                 const tokenData = await authClient.token();
                 const token = tokenData?.token;
 
-                const res = await fetch(`http://localhost:5000/api/appointments?email=${session.user.email}`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments?email=${session.user.email}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ const PaymentHistoryTable = () => {
                 const data = await res.json();
                 
                 if (Array.isArray(data)) {
-                    // 🔒 শুধুমাত্র যে পেশেন্ট লগইন করেছে তার বুকিংগুলোই ফিল্টার হবে
+               
                     const myBookings = data.filter(item => item.userEmail === session.user.email);
                     setAppointments(myBookings);
                 } else {

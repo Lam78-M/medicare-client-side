@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-// 🎯 React Toastify ইমপোর্ট করা হলো
+
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -11,7 +11,7 @@ const DoctorsPage = () => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    // View Toggle State: 'grid' or 'table'
+
     const [viewMode, setViewMode] = useState('grid');
 
     // Search filters state
@@ -19,7 +19,6 @@ const DoctorsPage = () => {
     const [selectedSpecialty, setSelectedSpecialty] = useState('');
     const [sortOrder, setSortOrder] = useState(''); 
 
-    // 📄 Pagination States (প্রতি পেজে ১২টি করে)
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
 
@@ -36,15 +35,14 @@ const DoctorsPage = () => {
         setSearch('');
         setSelectedSpecialty('');
         setSortOrder('');
-        setCurrentPage(1); // ফিল্টার রিসেট হলে প্রথম পেজে ফেরত যাবে
+        setCurrentPage(1); 
     };
 
-    // ফিল্টার চেঞ্জ হলে যেন পেজিনেশন আবার ১ নম্বর পেজ থেকে শুরু হয়
     useEffect(() => {
         setCurrentPage(1);
     }, [search, selectedSpecialty, sortOrder]);
 
-    // 🎯 handleBookingClick ফাংশন রিঅ্যাক্ট টোস্ট সহ
+ 
     const handleBookingClick = (doctor, doctorId) => {
         const currentStatus = doctor?.verificationStatus?.toLowerCase();
 
@@ -76,7 +74,7 @@ const DoctorsPage = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                let url = `http://localhost:5000/api/doctors?`;
+                let url = `${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors?`;
                 const params = new URLSearchParams();
                 
                 if (search.trim() !== '') params.append('search', search);
@@ -108,17 +106,17 @@ const DoctorsPage = () => {
         return () => clearTimeout(delayDebounceFn);
     }, [search, selectedSpecialty, sortOrder]);
 
-    // 🧮 Pagination Calculations
+    //  Pagination Calculations
     const totalPages = Math.ceil(doctors.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    // বর্তমান পেজের জন্য শুধু ১২টি ডক্টর স্লাইস করা হচ্ছে
+   
     const currentDoctors = doctors.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
         <div className="min-h-screen py-12 px-4 md:px-10" style={{ backgroundColor: '#F5F5F5' }}>
             
-            {/* 🎯 টোস্ট মেসেজ দেখানোর কন্টেইনার */}
+      
             <ToastContainer />
 
             {/* Header Section */}
@@ -204,7 +202,7 @@ const DoctorsPage = () => {
                     <p className="text-sm font-bold text-gray-400">No doctors found matching your criteria.</p>
                 </div>
             ) : viewMode === 'grid' ? (
-                /* 🗂️ GRID/CARD MODE LAYOUT */
+ 
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {currentDoctors.map((doctor) => {
                         const doctorId = doctor._id?.$oid || doctor._id;
@@ -265,7 +263,7 @@ const DoctorsPage = () => {
                     })}
                 </div>
             ) : (
-                /* 📊 TABULAR VIEW MODE LAYOUT */
+                /* TABULAR VIEW MODE LAYOUT */
                 <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-sm border border-[#021A54]/10 overflow-hidden">
                     <div className="overflow-x-auto w-full">
                         <table className="w-full text-left border-collapse">
@@ -343,7 +341,7 @@ const DoctorsPage = () => {
                 </div>
             )}
 
-            {/* 🎯 PREMIUM CUSTOM LARGE PAGINATION UI */}
+
             {!loading && totalPages > 1 && (
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 pt-6 border-t border-gray-200/60">
                     <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl shadow-[0_8px_20px_rgba(2,26,84,0.05)] border border-gray-100">

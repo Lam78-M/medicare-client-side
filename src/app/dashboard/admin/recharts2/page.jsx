@@ -53,7 +53,7 @@ export default function Recharts2() {
   useEffect(() => {
     async function loadDoctors() {
       try {
-        const res = await fetch("http://localhost:5000/api/doctors");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors`);
 
         const data = await res.json();
 

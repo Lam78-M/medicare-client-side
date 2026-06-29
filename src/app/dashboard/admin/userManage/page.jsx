@@ -4,25 +4,22 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// 🎯 Framer Motion ইমপোর্ট করা হলো চমৎকার অ্যানিমেশনের জন্য
 import { motion, AnimatePresence } from "framer-motion";
 import { GiToken } from "react-icons/gi";
-// 🎯 এই ইমপোর্ট লাইনটি এখানে মিসিং ছিল, এটি যোগ করা হলো:
 import { authClient } from "@/lib/auth-client"; 
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // সব ইউজার লোড করার ফাংশন
     const loadUsers = async () => {
         try {
             setLoading(true);
-            // 🔒 authClient থেকে টোকেন নেওয়া হচ্ছে
+        
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/all-user`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,7 +44,7 @@ export default function ManageUsers() {
         loadUsers();
     }, []);
 
-    // 🎯 কাস্টম থিম টোস্ট ফাংশন (নেভি ব্লু ও রোজ পিঙ্ক কম্বিনেশন)
+  
     const showToast = (message, type = "success") => {
         const config = {
             position: "top-right",
@@ -66,14 +63,14 @@ export default function ManageUsers() {
         else toast.error(message, config);
     };
 
-    // 🔄 Active / Suspend হ্যান্ডলার
+ 
     const toggleStatus = async (id, currentStatus) => {
         const nextStatus = currentStatus === "active" ? "suspended" : "active";
         try {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
             
-            const res = await fetch(`http://localhost:5000/api/admin/update-user-status`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/update-user-status`, {
                 method: "PUT",
                 headers: { 
                     "Content-Type": "application/json",
@@ -93,14 +90,14 @@ export default function ManageUsers() {
         }
     };
 
-    // 🔴 Delete হ্যান্ডলার
+    //  Delete হ্যান্ডলার
     const handleDeleteUser = async (id) => {
         if (!confirm("Are you sure you want to permanently delete this user?")) return;
         try {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch("http://localhost:5000/api/admin/delete-user", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/delete-user`, {
                 method: "DELETE",
                 headers: { 
                     "Content-Type": "application/json",
@@ -141,7 +138,7 @@ export default function ManageUsers() {
                         <p className="text-gray-400 font-medium">No users found in the system.</p>
                     </div>
                 ) : (
-                    /* 📊 রেসপন্সিভ প্রিমিয়াম টেবিল লেআউট */
+                
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -168,7 +165,7 @@ export default function ManageUsers() {
                                                     transition={{ duration: 0.2 }}
                                                     className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
                                                 >
-                                                    {/* ইউজার ইমেজ ও নাম-ইমেইল */}
+                                        
                                                     <td className="py-4 px-6 flex items-center gap-4">
                                                         <div className="w-11 h-11 relative rounded-xl overflow-hidden bg-gray-50 border shrink-0">
                                                             <Image 
@@ -185,20 +182,20 @@ export default function ManageUsers() {
                                                         </div>
                                                     </td>
 
-                                                    {/* রোল কলাম */}
+                                          
                                                     <td className="py-4 px-6">
                                                         <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-50 text-[#021A54]">
                                                             👤 {user.role}
                                                         </span>
                                                     </td>
 
-                                                    {/* কন্টাক্ট ইনফো */}
+                                     
                                                     <td className="py-4 px-6 text-xs text-gray-500 font-semibold">
                                                         <p>📞 {user.phone || "N/A"}</p>
                                                         <p className="font-normal text-gray-400">⚥ {user.gender || "N/A"}</p>
                                                     </td>
 
-                                                    {/* স্ট্যাটাস ব্যাজ */}
+                                         
                                                     <td className="py-4 px-6">
                                                         <span 
                                                             className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full inline-block transition-colors duration-300"
@@ -211,11 +208,11 @@ export default function ManageUsers() {
                                                         </span>
                                                     </td>
 
-                                                    {/* ⚙️ অ্যাকশন বাটন কন্ট্রোল */}
+                                          
                                                     <td className="py-4 px-6 text-center">
                                                         <div className="flex items-center justify-center gap-3">
                                                             
-                                                            {/* Active / Suspend বাটন */}
+                                                  
                                                             <motion.button
                                                                 whileHover={{ scale: 1.05 }}
                                                                 whileTap={{ scale: 0.95 }}
@@ -229,7 +226,7 @@ export default function ManageUsers() {
                                                                 {isSuspended ? "Activate" : "Suspend"}
                                                             </motion.button>
 
-                                                            {/* Delete বাটন */}
+                                                 
                                                             <motion.button
                                                                 whileHover={{ scale: 1.05, backgroundColor: "#dc2626", color: "#ffffff" }}
                                                                 whileTap={{ scale: 0.95 }}

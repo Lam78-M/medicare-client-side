@@ -4,22 +4,19 @@ import React, { useEffect, useState } from 'react';
 import { Spinner, Chip } from "@heroui/react"; 
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css';
-// 🎯 এই ইমপোর্ট লাইনটি মিসিং ছিল, এটা যোগ করা হয়েছে:
 import { authClient } from "@/lib/auth-client"; 
 
 export default function AdminAppointmentDashboard() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // ডাটাবেজের সব ডাটা একসাথে নিয়ে আসার ফাংশন
     const fetchAllAppointments = async () => {
         setLoading(true);
         try {
-            // 🔒 authClient থেকে টোকেন নেওয়া হচ্ছে
+      
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/appointments`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -53,7 +50,7 @@ export default function AdminAppointmentDashboard() {
         <div className="w-full bg-white rounded-3xl p-4 sm:p-6 shadow-sm border border-gray-100 max-w-6xl mx-auto my-6">
             <ToastContainer />
 
-            {/* অ্যাডমিন প্যানেল হেডার */}
+       
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-gray-100 mb-6">
                 <div>
                     <h2 className="text-xl sm:text-2xl font-black text-[#021A54] tracking-tight">Admin Booking Directory</h2>
@@ -64,7 +61,7 @@ export default function AdminAppointmentDashboard() {
                 </Chip>
             </div>
 
-            {/* 🔄 📱 Responsive Container */}
+            {/*  Responsive Container */}
             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200">
                 <table className="w-full border-collapse text-left min-w-[800px]"> 
                     <thead>
@@ -93,41 +90,40 @@ export default function AdminAppointmentDashboard() {
                                 return (
                                     <tr key={currentId} className="border-b border-gray-100 hover:bg-gray-50/60 transition-colors duration-200">
                                         
-                                        {/* ১. পেশেন্টের নাম ও ইমেইল */}
+                                   
                                         <td className="p-4 whitespace-nowrap">
                                             <div className="font-extrabold text-gray-800 text-sm">{appointment.userName || "Anonymous"}</div>
                                             <div className="text-[11px] text-gray-400 font-medium">{appointment.userEmail || "No Email"}</div>
                                         </td>
 
-                                        {/* ২. ডক্টরের নাম */}
+                         
                                         <td className="p-4 font-bold text-gray-700 text-sm whitespace-nowrap">
                                             {appointment.doctorName || "N/A"}
                                         </td>
 
-                                        {/* ৩. স্পেশালাইজেশন চিপ */}
+                                 
                                         <td className="p-4 whitespace-nowrap">
                                             <Chip size="sm" className="font-bold text-[10px] bg-[#FFCEE3] text-[#021A54]">
                                                 {appointment.specialization || "General"}
                                             </Chip>
                                         </td>
                                         
-                                        {/* ৪. ডেট এবং ডে */}
+                                    
                                         <td className="p-4 text-sm font-bold text-gray-700 whitespace-nowrap">
                                             🗓️ {appointment.appointmentDate}
                                             <span className="block text-[10px] text-gray-400 uppercase font-medium mt-0.5">{appointment.appointmentDay}</span>
                                         </td>
                                         
-                                        {/* ৫. টাইম স্লট */}
+                                   
                                         <td className="p-4 text-sm font-black text-gray-600 whitespace-nowrap">
                                             🕒 {appointment.appointmentTime}
                                         </td>
                                         
-                                        {/* ৬. ফি */}
+                     
                                         <td className="p-4 text-sm font-black text-[#FF85BB] whitespace-nowrap">
                                             ৳{appointment.consultationFee}
                                         </td>
-                                        
-                                        {/* ৭. স্ট্যাটাস চিপ */}
+                        
                                         <td className="p-4 text-center whitespace-nowrap">
                                             <Chip size="sm" variant="flat" className={`font-black text-[10px] shadow-sm mx-auto ${
                                                 appointment.status === 'Approved' 

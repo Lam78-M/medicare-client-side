@@ -27,9 +27,6 @@ export async function POST(req) {
       ],
       mode: 'payment',
       
-      // 🚀 FIX: Comment out or remove this line to bypass "Confirm it's you" / Link login trigger
-      // customer_email: userEmail, 
-
       metadata: {
         appointmentId: appointmentId,
       },

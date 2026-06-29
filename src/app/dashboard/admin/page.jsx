@@ -9,8 +9,8 @@ import { authClient } from "@/lib/auth-client";
 export default function DashboardOverview() {
     const [users, setUsers] = useState([]);
     const [verifiedDoctorsCount, setVerifiedDoctorsCount] = useState(0);
-    const [totalRevenue, setTotalRevenue] = useState(0); // 💰 টোটাল ভলিউমের স্টেট
-    const [txCount, setTxCount] = useState(0); // 📊 মোট পেইড ট্রানজেকশনের স্টেট
+    const [totalRevenue, setTotalRevenue] = useState(0); 
+    const [txCount, setTxCount] = useState(0); 
     const [loading, setLoading] = useState(true);
 
     const loadDashboardData = async () => {
@@ -20,17 +20,16 @@ export default function DashboardOverview() {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            // 🔄 ৩টি API একসাথে প্যারালালি কল করা হচ্ছে (সুপার ফাস্ট পারফরম্যান্স)
             const [usersRes, doctorsRes, appointmentsRes] = await Promise.all([
-                fetch(`http://localhost:5000/api/admin/all-user`, {
+                fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/all-user`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }
                 }),
-                fetch(`http://localhost:5000/api/admin/pending-doctors`, {
+                fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/admin/pending-doctors`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }
                 }),
-                fetch(`http://localhost:5000/api/appointments`, {
+                fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 })
@@ -40,12 +39,11 @@ export default function DashboardOverview() {
             const doctorsData = await doctorsRes.json();
             const appointmentsData = await appointmentsRes.json();
 
-            // ১. ইউজার স্টেট সেট
+          
             if (Array.isArray(usersData)) {
                 setUsers(usersData);
             }
 
-            // ২. ভেরিফাইড ডক্টর কাউন্ট সেট
             if (Array.isArray(doctorsData)) {
                 const verifiedCount = doctorsData.filter(
                     (doc) => doc.verificationStatus?.toLowerCase() === "verified"
@@ -53,7 +51,6 @@ export default function DashboardOverview() {
                 setVerifiedDoctorsCount(verifiedCount);
             }
 
-            // ৩. পেমেন্ট ডাটা প্রসেস ও স্টেট সেট
             if (Array.isArray(appointmentsData)) {
                 const revenue = appointmentsData.reduce((sum, app) => sum + (Number(app.consultationFee) || 0), 0);
                 setTotalRevenue(revenue);
@@ -78,7 +75,7 @@ export default function DashboardOverview() {
     const totalAdmins = users.filter(user => user.role?.toLowerCase() === "admin").length;
     const activeUsers = users.filter(user => (user.status || "active") === "active").length;
 
-    // 🗂️ কার্ড ডেটা লিস্ট
+    
     const cardsData = [
         {
             title: "Total Patients",
@@ -105,14 +102,14 @@ export default function DashboardOverview() {
             description: "Currently active accounts on hub",
             border: "1px solid #e5e7eb"
         },
-        // 🎯 এখানে Suspended Accounts সরিয়ে পেমেন্ট ভলিউম কার্ড দেওয়া হলো
+       
         {
             title: "Total Volume",
-            count: `৳ ${totalRevenue.toLocaleString()}`, // 👈 সুন্দর করে ফরম্যাট করা অ্যামাউন্ট
+            count: `৳ ${totalRevenue.toLocaleString()}`, 
             icon: <DollarSign size={22} />,
-            bgColor: "#fee2e2", // হালকা লালচে/গোলাপী ব্যাকগ্রাউন্ড ব্যাকআপ রাখা হলো
+            bgColor: "#fee2e2", 
             textColor: "#ef4444",
-            description: `${txCount} Total entries successfully checked out` // 👈 মোট ট্রানজেকশন কাউন্ট ডেসক্রিপশনে দিয়ে দেওয়া হলো
+            description: `${txCount} Total entries successfully checked out` 
         }
     ];
 
@@ -144,7 +141,7 @@ export default function DashboardOverview() {
                         </span>
                     </div>
 
-                    {/* 🗂️ গ্রিড লেআউটে ওভারভিউ কার্ডস */}
+       
                     <motion.div 
                         variants={containerVariants}
                         initial="hidden"
@@ -175,7 +172,7 @@ export default function DashboardOverview() {
                                             {card.icon}
                                         </div>
                                     </div>
-                                    {/* 💡 এখানে টেক্সটের সাইজ একটু ব্যালেন্স করা হয়েছে যাতে বড় টাকার ফিগার সুন্দরভাবে ধরে যায় */}
+                      
                                     <h2 className="text-2xl md:text-3xl font-black mb-1 tracking-tight">
                                         {card.count}
                                     </h2>
@@ -188,7 +185,7 @@ export default function DashboardOverview() {
                         ))}
                     </motion.div>
 
-                    {/* 📊 কুইক স্ট্যাটাস সেকশন */}
+                  
                     <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h3 className="font-extrabold text-base text-[#021A54]">System Management Notice</h3>
@@ -208,7 +205,7 @@ export default function DashboardOverview() {
                 </div>
             </div>
 
-            {/* 📊 চার্ট কম্পোনেন্ট */}
+        
             <div className="px-4 md:px-8 pb-10">
                 <div className="max-w-6xl mx-auto">
                     <DoctorRecharts />

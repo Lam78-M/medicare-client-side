@@ -29,8 +29,7 @@ export default function PatientFeedbackPage() {
 
         const tokenData = await authClient.token();
         const token = tokenData?.token;
-        console.log("🚀 ১ নম্বর (Main) এপিআই-তে রিকোয়েস্ট পাঠানো হচ্ছে...");
-        const response = await fetch(`http://localhost:5000/api/v1/patient-appointments/${patientEmail}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/patient-appointments/${patientEmail}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +48,7 @@ export default function PatientFeedbackPage() {
           console.log("⚠️ ১ নম্বর রুট কাজ করেনি। এবার ২ নম্বর (Backup) রুটে ট্রাই করছি...");
            const tokenData = await authClient.token();
         const token = tokenData?.token;
-          const backupRes = await fetch(`http://localhost:5000/api/appointments/patient?email=${patientEmail}`, {
+          const backupRes = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/patient?email=${patientEmail}`, {
               method: 'GET',
               headers: {
                   'Content-Type': 'application/json',
@@ -113,7 +112,7 @@ export default function PatientFeedbackPage() {
    const tokenData = await authClient.token();
         const token = tokenData?.token;
 
-      const response = await fetch(`http://localhost:5000/api/v1/reviews`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/v1/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json",
           authorization: `Bearer${tokenData?.token}`

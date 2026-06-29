@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Spinner } from "@heroui/react";
 import { authClient } from "@/lib/auth-client"; 
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 
 const UpdateProfilePage = () => {
     const { data: session, isPending: isSessionLoading } = authClient.useSession();
@@ -26,13 +28,12 @@ const UpdateProfilePage = () => {
         }
     }, [session]);
 
-    // 🚀 Submit Function
+ 
     const handleProfileUpdate = async (e) => {
         e.preventDefault();
         
-        // 🎯 হ্যাক ১: কিউতে জমে থাকা বা হ্যাং হওয়া সব ওল্ড টোস্ট মেমরি থেকে ডিলিট করবে
-        toast.dismiss();
-        toast.clearWaitingQueue(); 
+  
+        toast.dismiss(); 
 
         if (!doctorEmail) {
             toast.error("Logged-in doctor's email not found! ❌");
@@ -40,16 +41,13 @@ const UpdateProfilePage = () => {
         }
 
         if (!specialization && !qualifications && !hospitalName && !profileImage && !experience && !consultationFee) {
-            toast.warning("Please fill in at least one field to update.");
+            toast.warning("Please fill in at least one field to update. ⚠️");
             return;
         }
 
-        // 🎯 হ্যাক ২: একটি 'লোডিং টোস্ট' আইডি জেনারেট করে স্ক্রিনে আটকে রাখা
-        const toastId = toast.loading("Updating your profile info... ⏳", {
-            position: "top-right"
-        });
-
+        const toastId = toast.loading("Updating your profile info... ⏳");
         setUpdateLoading(true);
+
         try {
             const updatePayload = {
                 email: doctorEmail,
@@ -61,7 +59,7 @@ const UpdateProfilePage = () => {
                 ...(consultationFee && { consultationFee: Number(consultationFee) }),
             };
 
-            const response = await fetch(`http://localhost:5000/api/doctors/update-profile-by-email`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/doctors/update-profile-by-email`, {
                 method: 'PATCH', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatePayload)
@@ -70,8 +68,7 @@ const UpdateProfilePage = () => {
             const result = await response.json();
 
             if (response.ok) {
-                // 🎯 হ্যাক ৩: ওই লোডিং টোস্ট আইডি ধরেই ওটাকে সাকসেস মেসেজে রূপান্তর করা
-                // এটা করলে ১০০০ বার আপডেট করলেও প্রতিবার ১০০% টোস্ট স্ক্রিনে রি-রেন্ডার হবেই!
+          
                 toast.update(toastId, {
                     render: "Your profile information has been updated successfully! 🎉🚀",
                     type: "success",
@@ -89,7 +86,7 @@ const UpdateProfilePage = () => {
         } catch (error) {
             console.error("Profile update error:", error);
             toast.update(toastId, {
-                render: "Unable to connect to the server.",
+                render: "Unable to connect to the server. 🖥️❌",
                 type: "error",
                 isLoading: false,
                 autoClose: 3000,
@@ -120,6 +117,10 @@ const UpdateProfilePage = () => {
 
     return (
         <div className="min-h-screen py-10 px-4 md:px-12 bg-[#F5F5F5] flex justify-center items-center">
+            
+      
+            <ToastContainer position="top-right" autoClose={3000} />
+
             <Card className="max-w-2xl w-full bg-white p-8 rounded-3xl border border-[#2652b8]/20 shadow-xl space-y-6">
                 
                 <div className="text-center border-b border-gray-100 pb-4">

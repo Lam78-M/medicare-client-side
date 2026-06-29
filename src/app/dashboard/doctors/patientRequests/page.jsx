@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Chip } from "@heroui/react";
 import { toast } from 'react-toastify'; 
-// 🟢 Better Auth ক্লায়েন্ট হেল্পার
+
 import { authClient } from "@/lib/auth-client"; 
 import Link from 'next/link';
 
@@ -11,7 +11,7 @@ export default function DoctorAppointmentPage() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // 🟢 Better Auth সেশন ডেটা
+  
     const { data: session, isPending } = authClient.useSession();
     const doctorEmail = session?.user?.email;
 
@@ -28,7 +28,7 @@ const fetchAppointments = async () => {
         const tokenData = await authClient.token();
         const token = tokenData?.token;
 
-        fetch(`http://localhost:5000/api/appointments/doctor?email=${cleanedEmail}`, {
+        fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/doctor?email=${cleanedEmail}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ useEffect(() => {
             const tokenData = await authClient.token();
         const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/appointments/approve/${id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/approve/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json',
                      authorization: `Bearer ${token}`
@@ -96,7 +96,7 @@ useEffect(() => {
         try {
             const tokenData = await authClient.token();
         const token = tokenData?.token;
-            const res = await fetch(`http://localhost:5000/api/appointments/delete/${id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/appointments/delete/${id}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json',
                      authorization: `Bearer ${token}`
@@ -154,7 +154,7 @@ useEffect(() => {
         <div className="min-h-screen bg-[#F5F5F5] py-10 px-4 sm:px-6 lg:px-8 w-full relative">
             <div className="max-w-5xl mx-auto space-y-6">
                 
-                {/* Header Section */}
+
                 <div className="text-center mb-4">
                     <h1 className="text-3xl font-black text-[#021A54] tracking-tight">
                         Doctor's Patient Dashboard
@@ -245,10 +245,10 @@ useEffect(() => {
                                             </div>
                                         </div>
 
-                                        {/* Right Side: Action Buttons (Approve / Prescribe & Cancel) */}
+                   
                                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end ml-auto lg:ml-0">
                                             
-                                            {/* ডিলিট / ক্যানসেল বাটন (যেকোনো স্ট্যাটাসেই ডাক্তার ডিলিট করতে পারবেন) */}
+                                  
                                             <Button 
                                                 size="sm"
                                                 variant="light"

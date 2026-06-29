@@ -35,7 +35,7 @@ const fetchPrescriptions = async () => {
     try {
         const tokenData = await authClient.token();
         const token = tokenData?.token;
-        const response = await fetch(`http://localhost:5000/api/prescriptions/all`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/prescriptions/all`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -87,7 +87,7 @@ useEffect(() => {
                     const token = tokenData?.token; 
 
         try {
-            const response = await fetch(`http://localhost:5000/api/prescriptions/save`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/prescriptions/save`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json",
                     authorization : `Bearer ${tokenData?.token}`

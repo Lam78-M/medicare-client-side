@@ -18,7 +18,7 @@ export default function PrescriptionHistoryPage() {
 
             const tokenData = await authClient.token(); 
             const token = tokenData?.token; 
-            const response = await fetch("http://localhost:5000/api/prescriptions/all", {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/prescriptions/all`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",

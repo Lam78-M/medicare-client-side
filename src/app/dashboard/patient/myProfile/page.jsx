@@ -29,7 +29,7 @@ const MyProfilePage = () => {
             const tokenData = await authClient.token();
             const token = tokenData?.token;
 
-            const res = await fetch(`http://localhost:5000/api/user/${userEmail}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/user/${userEmail}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ const MyProfilePage = () => {
         try {
              const tokenData = await authClient.token(); 
             const token = tokenData?.token; 
-            const response = await fetch(`http://localhost:5000/api/user/update-profile`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URL}/api/user/update-profile`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json',
                     authorization: `Bearer ${tokenData?.token}`
