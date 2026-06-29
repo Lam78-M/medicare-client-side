@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -9,164 +9,100 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  Cell,
 } from "recharts";
 import Recharts2 from "../recharts2/page";
 import Recharts3 from "../recharts3/page";
 
-export default function DoctorDashboard() {
-  const [doctors, setDoctors] = useState([]);
+export default function ReviewsChart() {
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-    const loadDoctors = async () => {
-      try {
-        const tokenData = await authClient.token();
-        const token = tokenData?.token;
-
-        const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                authorization: `Bearer ${tokenData?.token}`
-            }
-        });
-
-        const data = await res.json();
-
-        if (Array.isArray(data)) {
-          setDoctors(data);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
+  useEffect(() => {
+    fetch("http://localhost:5000/reviews")
+      .then((res) => res.json())
+      .then((data) => {
+        setReviews(data);
         setLoading(false);
-      }
-    };
-
-    loadDoctors();
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
   }, []);
-  const totalDoctors = doctors.length;
 
-  const verifiedDoctors = doctors.filter(
-    (doctor) =>
-      doctor.verificationStatus?.toLowerCase() === "verified"
-  ).length;
+  const chartData = reviews.map((review) => ({
+    name: review.patientName,
+    rating: review.rating,
+  }));
 
-  const pendingDoctors = doctors.filter(
-    (doctor) =>
-      doctor.verificationStatus?.toLowerCase() !== "verified"
-  ).length;
-
-  const chartData = [
-    {
-      name: "Total",
-      count: totalDoctors,
-    },
-    {
-      name: "Verified",
-      count: verifiedDoctors,
-    },
-    {
-      name: "Pending",
-      count: pendingDoctors,
-    },
+  const colors = [
+    "#10B981",
+    "#3B82F6",
+    "#F59E0B",
+    "#8B5CF6",
+    "#EF4444",
+    "#06B6D4",
   ];
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="bg-white rounded-xl shadow-md p-6">
         Loading...
       </div>
     );
   }
 
   return (
- <div>
-     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div>
+      <div className="bg-white rounded-xl shadow-md border p-6">
+      <h2 className="text-xl font-bold mb-6">
+        Clinician Performance Index (Ratings)
+      </h2>
 
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-[#021A54] mb-8">
-          Doctor Analytics Dashboard
-        </h1>
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <XAxis
+            dataKey="name"
+            tick={{ fontSize: 12 }}
+          />
 
-          <div className="bg-white border rounded-3xl p-6 shadow-sm">
-            <h3 className="text-gray-500 font-medium">
-              Total Doctors
-            </h3>
-            <p className="text-4xl font-bold text-[#021A54] mt-2">
-              {totalDoctors}
-            </p>
-          </div>
+          <YAxis
+            domain={[0, 5]}
+            ticks={[0, 1, 2, 3, 4, 5]}
+          />
 
-          <div className="bg-white border rounded-3xl p-6 shadow-sm">
-            <h3 className="text-gray-500 font-medium">
-              Verified Doctors
-            </h3>
-            <p className="text-4xl font-bold text-green-600 mt-2">
-              {verifiedDoctors}
-            </p>
-          </div>
+          <Tooltip />
 
-          <div className="bg-white border rounded-3xl p-6 shadow-sm">
-            <h3 className="text-gray-500 font-medium">
-              Pending Doctors
-            </h3>
-            <p className="text-4xl font-bold text-orange-500 mt-2">
-              {pendingDoctors}
-            </p>
-          </div>
-
-        </div>
-
-        {/* Chart Card */}
-        <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6 h-[500px]">
-
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-            Doctor Verification Statistics
-          </h2>
-
-          <ResponsiveContainer width="100%" height="90%">
-            <BarChart
-              data={chartData}
-              margin={{
-                top: 10,
-                right: 20,
-                left: 0,
-                bottom: 10,
-              }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                vertical={false}
+          <Bar
+            dataKey="rating"
+            radius={[6, 6, 0, 0]}
+          >
+            {chartData.map((item, index) => (
+              <Cell
+                key={index}
+                fill={colors[index % colors.length]}
               />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
 
-              <XAxis dataKey="name" />
-
-              <YAxis />
-
-              <Tooltip />
-
-              <Legend />
-
-              <Bar
-                dataKey="count"
-                fill="#10B981"
-                radius={[6, 6, 0, 0]}
-                name="Doctor Count"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-
+      <div className="flex justify-center mt-4">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-500 rounded"></div>
+          <span>Review Rating</span>
         </div>
       </div>
+      
     </div>
+    <br></br>
     <Recharts2></Recharts2>
-    <Recharts3></Recharts3>
- </div>
+    <br></br>
+    <Recharts3 ></Recharts3>
+    </div>
+
   );
 }

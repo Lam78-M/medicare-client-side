@@ -19,10 +19,9 @@ const DoctorsPage = () => {
 useEffect(() => {
     const fetchAllReviews = async () => {
         try {
-            setLoadingReviews(true);
-
-            const tokenData = await authClient.token();
+               const tokenData = await authClient.token();
             const token = tokenData?.token;
+            setLoadingReviews(true);
             const response = await fetch(`http://localhost:5000/api/v1/reviews`, {
                 method: 'GET',
                 headers: {

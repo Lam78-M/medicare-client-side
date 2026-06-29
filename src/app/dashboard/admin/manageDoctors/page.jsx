@@ -12,33 +12,34 @@ export default function ManageDoctors() {
 
     // ডক্টর লিস্ট লোড করার ফাংশন
     const loadDoctors = async () => {
-    try {
-        setLoading(true);
+        try {
+            setLoading(true);
+            // 🔑 Better Auth থেকে টোকেন নিলাম
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
 
-        // 🔑 Better Auth থেকে টোকেন নিলাম
-        const tokenData = await authClient.token();
-          const token = tokenData?.token;
-        const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                authorization: `Bearer ${tokenData?.token}` 
+            const res = await fetch("http://localhost:5000/api/admin/pending-doctors", {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    authorization: `Bearer ${token}` 
+                }
+            });
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setDoctors(data);
             }
-        });
-        const data = await res.json();
-        if (Array.isArray(data)) {
-            setDoctors(data);
+        } catch (err) {
+            console.error("Error fetching data", err);
+            showToast("Failed to load doctors!", "error");
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.error("Error fetching data", err);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
-useEffect(() => {
-    loadDoctors();
-}, []);
+    useEffect(() => {
+        loadDoctors();
+    }, []);
 
     const showToast = (message, type = "success") => {
         const config = {
@@ -69,13 +70,15 @@ useEffect(() => {
     // 🟢 Approve হ্যান্ডলার
     const handleApprove = async (id) => {
         try {
-              const tokenData = await authClient.token();
-          const token = tokenData?.token;
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
+
             const res = await fetch(`http://localhost:5000/api/admin/approve-doctor`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json",
-                    authorization: `Bearer ${tokenData?.token}`
-                 },
+                headers: { 
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();
@@ -84,6 +87,8 @@ useEffect(() => {
                 setDoctors(prevDocs => 
                     prevDocs.map(doc => doc._id === id ? { ...doc, verificationStatus: 'Verified' } : doc)
                 );
+            } else {
+                showToast(data.message || "Approval failed!", "error");
             }
         } catch (err) {
             showToast("Failed to approve!", "error");
@@ -93,13 +98,15 @@ useEffect(() => {
     // 🟡 Cancel Verify হ্যান্ডলার
     const handleCancelVerify = async (id) => {
         try {
-            const tokenData = await authClient.token()
+            const tokenData = await authClient.token();
             const token = tokenData?.token;
+
             const res = await fetch(`http://localhost:5000/api/admin/cancel-verify`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json",
-                    authorization: `Bearer ${tokenData?.token}`
-                 },
+                headers: { 
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();
@@ -108,10 +115,11 @@ useEffect(() => {
                 setDoctors(prevDocs => 
                     prevDocs.map(doc => doc._id === id ? { ...doc, verificationStatus: 'Pending' } : doc)
                 );
+            } else {
+                showToast("Failed to cancel verification!", "error");
             }
         } catch (err) {
-            setDoctors(prevDocs => prevDocs.map(doc => doc._id === id ? { ...doc, verificationStatus: 'Pending' } : doc));
-            showToast("Verification reverted! (Frontend Update)", "success");
+            showToast("Something went wrong!", "error");
         }
     };
 
@@ -120,18 +128,26 @@ useEffect(() => {
         if (!confirm("Are you sure you want to reject this doctor's license?")) return;
 
         try {
-              const tokenData = await authClient.token();
-              const token = tokenData?.token;
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
+
             const res = await fetch(`http://localhost:5000/api/admin/reject-doctor`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json",
-                    authorization: `Bearer ${tokenData?.token}`
-                 },
+                headers: { 
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({ id })
             });
             
-            showToast("Doctor license rejected & removed! ❌", "error");
-            setDoctors(prevDocs => prevDocs.filter(doc => doc._id !== id));
+            const data = await res.json();
+            
+            if (res.ok || data.success) {
+                showToast("Doctor license rejected & removed! ❌", "error");
+                setDoctors(prevDocs => prevDocs.filter(doc => doc._id !== id));
+            } else {
+                showToast("Failed to reject license on server!", "error");
+            }
         } catch (err) {
             showToast("Failed to reject license!", "error");
         }
@@ -141,7 +157,6 @@ useEffect(() => {
 
     return (
         <div className="min-h-screen py-10 px-4 md:px-8" style={{ backgroundColor: '#FFFFFF' }}>
-            {/* টোস্ট কন্টেইনার */}
             <ToastContainer />
 
             <div className="max-w-5xl mx-auto">
@@ -197,19 +212,13 @@ useEffect(() => {
                                         </div>
                                     </div>
 
-                                    {/* ⚙️ ডাইনামিক অ্যাকশন বাটন কন্ট্রোল (কাস্টম কালার প্যালেট সহ) */}
+                                    {/* ⚙️ বাটন কন্ট্রোল (Tailwind দিয়ে হোভার ইফেক্ট ঠিক করা হয়েছে) */}
                                     <div className="grid grid-cols-2 gap-3 border-t border-gray-50 pt-4">
                                         {isApproved ? (
                                             /* ১. ভেরিফাইড হয়ে গেলে দেখাবে: Cancel Verify */
                                             <button 
                                                 onClick={() => handleCancelVerify(doc._id)}
-                                                className="text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200"
-                                                style={{ 
-                                                    backgroundColor: '#FFCEE3', 
-                                                    color: '#021A54',
-                                                }}
-                                                onMouseEnter={(e) => { e.target.style.backgroundColor = '#FF85BB'; e.target.style.color = '#ffffff'; }}
-                                                onMouseLeave={(e) => { e.target.style.backgroundColor = '#FFCEE3'; e.target.style.color = '#021A54'; }}
+                                                className="text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200 bg-[#FFCEE3] text-[#021A54] hover:bg-[#FF85BB] hover:text-white"
                                             >
                                                 Cancel Verify ↩️
                                             </button>
@@ -217,19 +226,16 @@ useEffect(() => {
                                             /* ২. নরমাল অবস্থায় দেখাবে: Approve */
                                             <button 
                                                 onClick={() => handleApprove(doc._id)}
-                                                className="text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200"
-                                                style={{ backgroundColor: '#021A54' }}
-                                                onMouseEnter={(e) => e.target.style.backgroundColor = '#FF85BB'}
-                                                onMouseLeave={(e) => e.target.style.backgroundColor = '#021A54'}
+                                                className="text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer text-center shadow-sm active:scale-95 duration-200 bg-[#021A54] hover:bg-[#FF85BB]"
                                             >
                                                 Approve ✅
                                             </button>
                                         )}
 
-                                        {/* ৩. সব অবস্থাতেই Reject License বাটনটি থাকবে */}
+                                        {/* ৩. Reject License বাটন */}
                                         <button 
                                             onClick={() => handleRejectLicense(doc._id)}
-                                            className="border border-red-500 text-red-600 hover:bg-red-600 hover:text-black text-xs font-bold py-2.5 px-4 rounded-xl transition-all duration-200 cursor-pointer text-center active:scale-95"
+                                            className="border border-red-500 text-red-600 hover:bg-red-600 hover:text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all duration-200 cursor-pointer text-center active:scale-95"
                                         >
                                             Reject License 🚫
                                         </button>
@@ -241,5 +247,5 @@ useEffect(() => {
                 )}
             </div>
         </div>
-    );
+    ); 
 }

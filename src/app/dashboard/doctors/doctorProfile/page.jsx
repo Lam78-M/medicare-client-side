@@ -1,180 +1,201 @@
-"use client";
-
+'use client'
 import React, { useState, useEffect } from 'react';
+import { Card, Button, Input, Spinner } from "@heroui/react";
+import { authClient } from "@/lib/auth-client"; 
 import { toast } from 'react-toastify';
 
-export default function DoctorProfileManagementPage({ doctorData }) {
-    // 🎯 Dynamic State Loader Fallback Matrix
-    const [activeDoctor, setActiveDoctor] = useState(null);
+const UpdateProfilePage = () => {
+    const { data: session, isPending: isSessionLoading } = authClient.useSession();
+    
+    const [doctorEmail, setDoctorEmail] = useState("");
+    const [doctorName, setDoctorName] = useState("");
+
+    const [specialization, setSpecialization] = useState("");
+    const [qualifications, setQualifications] = useState("");
+    const [hospitalName, setHospitalName] = useState("");
+    const [profileImage, setProfileImage] = useState("");
+    const [experience, setExperience] = useState("");
+    const [consultationFee, setConsultationFee] = useState("");
+    
+    const [updateLoading, setUpdateLoading] = useState(false);
 
     useEffect(() => {
-        if (doctorData) {
-            setActiveDoctor(doctorData);
-        } else {
-            // 🛡️ EMERGENCY RECOVERY: Jodi parent theke direct props na ashe ba late hoy,
-            // tokhon automatic state system eii object structure layout unlock kore dibe!
-            setActiveDoctor({
-                "_id": "6a35f5c6b5460cb6499eef7b", // Auto fallback identification hex
-                "doctorName": "Dr. Nigar Sultana",
-                "qualifications": "MBBS, MS (Orthopedics)",
-                "specialization": "Orthopedics",
-                "experience": 14,
-                "hospitalName": "National Institute of Traumatology (NITOR)"
-            });
+        if (session?.user) {
+            setDoctorEmail(session.user.email || "");
+            setDoctorName(session.user.name || "Doctor");
         }
-    }, [doctorData]);
+    }, [session]);
 
-    if (!activeDoctor) {
+    // 🚀 Submit Function
+    const handleProfileUpdate = async (e) => {
+        e.preventDefault();
+        
+        // 🎯 হ্যাক ১: কিউতে জমে থাকা বা হ্যাং হওয়া সব ওল্ড টোস্ট মেমরি থেকে ডিলিট করবে
+        toast.dismiss();
+        toast.clearWaitingQueue(); 
+
+        if (!doctorEmail) {
+            toast.error("Logged-in doctor's email not found! ❌");
+            return;
+        }
+
+        if (!specialization && !qualifications && !hospitalName && !profileImage && !experience && !consultationFee) {
+            toast.warning("Please fill in at least one field to update.");
+            return;
+        }
+
+        // 🎯 হ্যাক ২: একটি 'লোডিং টোস্ট' আইডি জেনারেট করে স্ক্রিনে আটকে রাখা
+        const toastId = toast.loading("Updating your profile info... ⏳", {
+            position: "top-right"
+        });
+
+        setUpdateLoading(true);
+        try {
+            const updatePayload = {
+                email: doctorEmail,
+                ...(specialization && { specialization }),
+                ...(qualifications && { qualifications }),
+                ...(hospitalName && { hospitalName }),
+                ...(profileImage && { profileImage }),
+                ...(experience && { experience: Number(experience) }),
+                ...(consultationFee && { consultationFee: Number(consultationFee) }),
+            };
+
+            const response = await fetch(`http://localhost:5000/api/doctors/update-profile-by-email`, {
+                method: 'PATCH', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // 🎯 হ্যাক ৩: ওই লোডিং টোস্ট আইডি ধরেই ওটাকে সাকসেস মেসেজে রূপান্তর করা
+                // এটা করলে ১০০০ বার আপডেট করলেও প্রতিবার ১০০% টোস্ট স্ক্রিনে রি-রেন্ডার হবেই!
+                toast.update(toastId, {
+                    render: "Your profile information has been updated successfully! 🎉🚀",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 3000,
+                });
+            } else {
+                toast.update(toastId, {
+                    render: result.message || "Profile update failed! ❌",
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 3000,
+                });
+            }
+        } catch (error) {
+            console.error("Profile update error:", error);
+            toast.update(toastId, {
+                render: "Unable to connect to the server.",
+                type: "error",
+                isLoading: false,
+                autoClose: 3000,
+            });
+        } finally {
+            setUpdateLoading(false);
+        }
+    };
+
+    if (isSessionLoading) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#021A54] mb-3"></div>
-                <p className="text-sm font-semibold text-slate-500">Initializing Profile Buffer... ⏳</p>
+            <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
+                <Spinner size="lg" style={{ color: '#021A54' }} label="Verifying Session..." />
+            </div>
+        );
+    }
+
+    if (!session) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-[#F5F5F5]">
+                <Card className="p-6 text-center max-w-sm bg-white border border-red-200 shadow-md">
+                    <p className="text-red-500 font-bold mb-3">You are not logged in! ❌</p>
+                    <p className="text-xs text-gray-500">Please log in to your doctor account to modify your profile.</p>
+                </Card>
             </div>
         );
     }
 
     return (
-        <div className="p-4 md:p-8 bg-slate-50 min-h-screen">
-            <DoctorProfileBioEditor doctorData={activeDoctor} />
-        </div>
-    );
-}
-
-// 🩺 EDIT PANEL (CHILD ROUTINE)
-function DoctorProfileBioEditor({ doctorData }) {
-    
-    // Extract ID safely context layer
-    const doctorId = doctorData?._id?.$oid || doctorData?._id || doctorData?.id || "6a35f5c6b5460cb6499eef7b";
-
-    // Inputs States initialized safely
-    const [qualifications, setQualifications] = useState(doctorData.qualifications || "");
-    const [specialization, setSpecialization] = useState(doctorData.specialization || "");
-    const [experience, setExperience] = useState(doctorData.experience !== undefined ? String(doctorData.experience) : "");
-    const [hospitalName, setHospitalName] = useState(doctorData.hospitalName || "");
-    const [saving, setSaving] = useState(false);
-
-    // Dynamic props shift detection
-    useEffect(() => {
-        if (doctorData) {
-            setQualifications(doctorData.qualifications || "");
-            setSpecialization(doctorData.specialization || "");
-            setExperience(doctorData.experience !== undefined ? String(doctorData.experience) : "");
-            setHospitalName(doctorData.hospitalName || "");
-        }
-    }, [doctorData]);
-
-    const handleProfileSubmit = async (e) => {
-        e.preventDefault();
-        
-        console.log("🚀 SUBMIT INITIATED. TARGETING ID:", doctorId);
-        setSaving(true);
-
-        const payload = {
-            qualifications: qualifications.trim(),
-            specialization: specialization.trim(),
-            experience: Number(experience) || 0, 
-            hospitalName: hospitalName.trim()
-        };
-
-        try {
-            const res = await fetch(`http://localhost:5000/api/doctors/update-profile/${doctorId}`, {
-                method: 'PATCH', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                toast.success(`Profile updated successfully! 🏛️🩺`);
+        <div className="min-h-screen py-10 px-4 md:px-12 bg-[#F5F5F5] flex justify-center items-center">
+            <Card className="max-w-2xl w-full bg-white p-8 rounded-3xl border border-[#2652b8]/20 shadow-xl space-y-6">
                 
-                // Memory state dynamic mapping update
-                doctorData.qualifications = payload.qualifications;
-                doctorData.specialization = payload.specialization;
-                doctorData.experience = payload.experience;
-                doctorData.hospitalName = payload.hospitalName;
-            } else {
-                toast.error(data.message || "Database synchronization failed.");
-            }
-        } catch (error) {
-            console.error("🔥 Submission exception:", error);
-            toast.error("Network interface connection timeout.");
-        } finally {
-            setSaving(false);
-        }
-    };
+                <div className="text-center border-b border-gray-100 pb-4">
+                    <h2 className="text-2xl font-extrabold text-[#021A54]">🩺 Update Profile Information</h2>
+                    <p className="text-sm font-bold text-pink-500 mt-1">Welcome, {doctorName}</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-1">Logged Email: {doctorEmail}</p>
+                </div>
 
-    return (
-        <div className="max-w-3xl mx-auto p-6 bg-white rounded-3xl border border-slate-200 shadow-xl space-y-6 my-6">
-            <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#021A54] bg-blue-50 px-2.5 py-1 rounded-md">
-                    Active Doctor: {doctorData?.doctorName || "User Session Profile"}
-                </span>
-                <h2 className="text-xl font-black text-slate-800 mt-2">Professional Identity Panel</h2>
-                <p className="text-xs text-slate-400 font-mono">
-                    Target MongoDB Object ID: <span className="text-pink-600 font-bold">{doctorId}</span>
-                </p>
-            </div>
-
-            <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleProfileUpdate} className="space-y-5">
                     
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-600">Medical Qualifications</label>
-                        <input 
-                            type="text" 
-                            required 
-                            className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-semibold"
-                            value={qualifications} 
-                            onChange={(e) => setQualifications(e.target.value)} 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input 
+                            label="Specialization" 
+                            placeholder="e.g., Cardiology"
+                            value={specialization}
+                            onChange={(e) => setSpecialization(e.target.value)}
+                            className="font-semibold text-black"
+                        />
+                        <Input 
+                            label="Qualifications" 
+                            placeholder="e.g., MBBS, MD (Cardiology)"
+                            value={qualifications}
+                            onChange={(e) => setQualifications(e.target.value)}
+                            className="font-semibold text-black"
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-600">Clinical Specialization</label>
-                        <input 
-                            type="text" 
-                            required 
-                            className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-semibold"
-                            value={specialization} 
-                            onChange={(e) => setSpecialization(e.target.value)} 
+                    <Input 
+                        label="Hospital Name" 
+                        placeholder="e.g., Dhaka Medical College Hospital"
+                        value={hospitalName}
+                        onChange={(e) => setHospitalName(e.target.value)}
+                        className="font-semibold text-black"
+                    />
+
+                    <Input 
+                        label="Profile Image URL" 
+                        placeholder="https://example.com/your-photo.jpg"
+                        value={profileImage}
+                        onChange={(e) => setProfileImage(e.target.value)}
+                        className="font-semibold text-black"
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input 
+                            type="number"
+                            label="Experience (Years)" 
+                            placeholder="e.g., 12"
+                            value={experience}
+                            onChange={(e) => setExperience(e.target.value)}
+                            className="font-semibold text-black"
+                        />
+                        <Input 
+                            type="number"
+                            label="Consultation Fee (BDT)" 
+                            placeholder="e.g., 1000"
+                            value={consultationFee}
+                            onChange={(e) => setConsultationFee(e.target.value)}
+                            className="font-semibold text-black"
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-600">Active Experience (Years)</label>
-                        <input 
-                            type="number" 
-                            required 
-                            className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-semibold"
-                            value={experience} 
-                            onChange={(e) => setExperience(e.target.value)} 
-                        />
+                    <div className="pt-4 border-t border-gray-100 flex justify-end">
+                        <Button 
+                            type="submit"
+                            isLoading={updateLoading}
+                            className="bg-[#021A54] text-white font-black px-10 py-6 rounded-2xl shadow-lg text-sm hover:bg-[#021A54]/90"
+                        >
+                            Save & Update Profile 🚀
+                        </Button>
                     </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-slate-600">Affiliated Hospital Complex</label>
-                        <input 
-                            type="text" 
-                            required 
-                            className="w-full px-3 py-2 text-sm text-black border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-semibold"
-                            value={hospitalName} 
-                            onChange={(e) => setHospitalName(e.target.value)} 
-                        />
-                    </div>
-
-                </div>
-
-                <div className="flex justify-end pt-2">
-                    <button 
-                        type="submit" 
-                        disabled={saving}
-                        className="bg-[#021A54] hover:bg-blue-900 text-white font-bold rounded-xl px-8 py-3 text-sm tracking-wide transition-all disabled:bg-slate-400 cursor-pointer shadow-md"
-                    >
-                        {saving ? "Synchronizing..." : "Sync Corporate Bio 🚀"}
-                    </button>
-                </div>
-            </form>
+                </form>
+            </Card>
         </div>
     );
-}
+};
+
+export default UpdateProfilePage;

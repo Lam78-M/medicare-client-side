@@ -20,7 +20,7 @@ export default function DashboardPrescrip() {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                authorization: `Bearer ${tokenData?.token}`
+                 'Authorization': `Bearer ${token}`
             }
         });
         const data = await response.json();

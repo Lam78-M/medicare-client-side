@@ -10,7 +10,7 @@ const PaymentHistoryTable = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
         const fetchPaymentHistory = async () => {
             if (!session?.user?.email) return;
             
@@ -22,13 +22,15 @@ const PaymentHistoryTable = () => {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                         authorization: `Bearer ${tokenData?.token}`
+                        authorization: `Bearer ${token}`
                     }
                 });
                 const data = await res.json();
                 
                 if (Array.isArray(data)) {
-                    setAppointments(data);
+                    // 🔒 শুধুমাত্র যে পেশেন্ট লগইন করেছে তার বুকিংগুলোই ফিল্টার হবে
+                    const myBookings = data.filter(item => item.userEmail === session.user.email);
+                    setAppointments(myBookings);
                 } else {
                     setAppointments([]);
                 }
@@ -45,9 +47,7 @@ const PaymentHistoryTable = () => {
         }
     }, [session, isSessionLoading]);
 
-    if (loading || isSessionLoading)
-  
-    {
+    if (loading || isSessionLoading) {
         return (
             <div className="flex justify-center items-center py-20 min-h-[300px]">
                 <Spinner size="lg" color="pink" label="Loading Payment History..." />
@@ -78,7 +78,7 @@ const PaymentHistoryTable = () => {
                         {appointments.length === 0 ? (
                             <tr>
                                 <td colSpan="6" className="p-8 text-center text-sm font-medium text-gray-400 italic">
-                                    No payment history found.
+                                    No booking history found for your account.
                                 </td>
                             </tr>
                         ) : (
@@ -89,16 +89,16 @@ const PaymentHistoryTable = () => {
                                     <tr key={currentId} className="hover:bg-gray-50/40 transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                              <div className="relative border border-pink-100 rounded-xl overflow-hidden w-10 h-10 min-w-[40px] bg-gray-50 flex items-center justify-center">
-    <Image
-        alt={appointment.doctorName || "Doctor Profile"}
-        src={appointment.doctorImage || "https://via.placeholder.com/150"}
-        fill
-        sizes="40px"
-        className="object-cover"
-        priority={false}
-    />
-</div>
+                                                <div className="relative border border-pink-100 rounded-xl overflow-hidden w-10 h-10 min-w-[40px] bg-gray-50 flex items-center justify-center">
+                                                    <Image
+                                                        alt={appointment.doctorName || "Doctor Profile"}
+                                                        src={appointment.doctorImage || "https://via.placeholder.com/150"}
+                                                        fill
+                                                        sizes="40px"
+                                                        className="object-cover"
+                                                        priority={false}
+                                                    />
+                                                </div>
                                                 <div className="flex flex-col text-left">
                                                     <p className="text-sm font-bold text-[#021A54] leading-tight">
                                                         {appointment.doctorName}
@@ -126,7 +126,7 @@ const PaymentHistoryTable = () => {
                                             </p>
                                         </td>
                                         <td className="p-4">
-                                            {/* 🎯 SHOB ROW-TE DIRECT "✅ PAID" CHIP */}
+                                            {/* 🎯 এখানে স্ট্যাটাস সবসময় সুন্দর করে Paid দেখাবে */}
                                             <Chip
                                                 className="capitalize font-extrabold text-xs px-2.5 py-1 rounded-xl"
                                                 color="success"
@@ -137,7 +137,7 @@ const PaymentHistoryTable = () => {
                                             </Chip>
                                         </td>
                                         <td className="p-4 text-center">
-                                            {/* 🎯 CUSTOM BLUE COLOURED PALETTE - PAYMENT SUCCESS BUTTON */}
+                                            {/* 🎯 তোমার রিকোয়ারমেন্ট অনুযায়ী বাটন সবসময় "Successful 🎉" থাকবে */}
                                             <Button
                                                 size="sm"
                                                 disabled

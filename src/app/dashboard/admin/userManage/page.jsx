@@ -7,6 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 // 🎯 Framer Motion ইমপোর্ট করা হলো চমৎকার অ্যানিমেশনের জন্য
 import { motion, AnimatePresence } from "framer-motion";
 import { GiToken } from "react-icons/gi";
+// 🎯 এই ইমপোর্ট লাইনটি এখানে মিসিং ছিল, এটি যোগ করা হলো:
+import { authClient } from "@/lib/auth-client"; 
 
 export default function ManageUsers() {
     const [users, setUsers] = useState([]);
@@ -16,29 +18,30 @@ export default function ManageUsers() {
     const loadUsers = async () => {
         try {
             setLoading(true);
+            // 🔒 authClient থেকে টোকেন নেওয়া হচ্ছে
             const tokenData = await authClient.token();
-        const token = tokenData?.token;
+            const token = tokenData?.token;
 
-      const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                 authorization: `Bearer ${tokenData?.token}`
-            }
-        });
+            const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    authorization: `Bearer ${token}`
+                }
+            });
 
-        if (!res.ok) throw new Error(`Server error: ${res.status}`);
-        
-        const data = await res.json();
-        if (Array.isArray(data)) setUsers(data);
-        
-    } catch (err) {
-        console.error("Error fetching users:", err);
-        showToast("Failed to load users from server!", "error");
-    } finally {
-        setLoading(false);
-    }
-};
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            
+            const data = await res.json();
+            if (Array.isArray(data)) setUsers(data);
+            
+        } catch (err) {
+            console.error("Error fetching users:", err);
+            showToast("Failed to load users from server!", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         loadUsers();
@@ -66,14 +69,16 @@ export default function ManageUsers() {
     // 🔄 Active / Suspend হ্যান্ডলার
     const toggleStatus = async (id, currentStatus) => {
         const nextStatus = currentStatus === "active" ? "suspended" : "active";
-             const tokenData = await authClient.token();
-        const token = tokenData?.token;
         try {
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
+            
             const res = await fetch(`http://localhost:5000/api/admin/update-user-status`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json",
-                    authorization: `Bearer ${tokenData?.token}`
-                 },
+                headers: { 
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({ id, status: nextStatus })
             });
             const data = await res.json();
@@ -90,17 +95,17 @@ export default function ManageUsers() {
 
     // 🔴 Delete হ্যান্ডলার
     const handleDeleteUser = async (id) => {
-
-             const tokenData = await authClient.token();
-        const token = tokenData?.token;
-
         if (!confirm("Are you sure you want to permanently delete this user?")) return;
         try {
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
+
             const res = await fetch("http://localhost:5000/api/admin/delete-user", {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json",
-                    authorization: `Bearer ${tokenData?.token}`
-                 },
+                headers: { 
+                    "Content-Type": "application/json",
+                    authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({ id })
             });
             const data = await res.json();
@@ -136,7 +141,7 @@ export default function ManageUsers() {
                         <p className="text-gray-400 font-medium">No users found in the system.</p>
                     </div>
                 ) : (
-                    /* 📊 রেসপন্সিভ প্রিমিয়াম টেবিল লেআউট */
+                    /* 📊 রেসপন্সিভ প্রিমিয়াম টেবিল লেআউট */
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -168,7 +173,7 @@ export default function ManageUsers() {
                                                         <div className="w-11 h-11 relative rounded-xl overflow-hidden bg-gray-50 border shrink-0">
                                                             <Image 
                                                                 src={user.image || "https://via.placeholder.com/150"}
-                                                                alt={user.name}
+                                                                alt={user.name || "User"}
                                                                 fill
                                                                 className="object-cover"
                                                                 unoptimized
@@ -206,7 +211,7 @@ export default function ManageUsers() {
                                                         </span>
                                                     </td>
 
-                                                    {/* ⚙️ অ্যাকশন বাটন কন্ট্রোল (Framer Motion ইন্টারেকশন সহ) */}
+                                                    {/* ⚙️ অ্যাকশন বাটন কন্ট্রোল */}
                                                     <td className="py-4 px-6 text-center">
                                                         <div className="flex items-center justify-center gap-3">
                                                             
@@ -219,18 +224,6 @@ export default function ManageUsers() {
                                                                 style={{
                                                                     backgroundColor: isSuspended ? '#021A54' : '#FFCEE3',
                                                                     color: isSuspended ? '#ffffff' : '#021A54'
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    if(!isSuspended) { 
-                                                                        e.target.style.backgroundColor = '#FF85BB'; 
-                                                                        e.target.style.color = '#ffffff'; 
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(e) => {
-                                                                    if(!isSuspended) { 
-                                                                        e.target.style.backgroundColor = '#FFCEE3'; 
-                                                                        e.target.style.color = '#021A54'; 
-                                                                    }
                                                                 }}
                                                             >
                                                                 {isSuspended ? "Activate" : "Suspend"}

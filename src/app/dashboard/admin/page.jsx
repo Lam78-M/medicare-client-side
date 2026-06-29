@@ -2,53 +2,83 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, UserCheck, Activity, ShieldAlert, RefreshCw } from "lucide-react";
+import { Users, UserCheck, Activity, DollarSign, RefreshCw } from "lucide-react"; // 💵 Suspended আইকনের বদলে DollarSign নেওয়া হলো
 import DoctorRecharts from "./doctorsRecharts.jsx/page";
+import { authClient } from "@/lib/auth-client";
 
 export default function DashboardOverview() {
     const [users, setUsers] = useState([]);
+    const [verifiedDoctorsCount, setVerifiedDoctorsCount] = useState(0);
+    const [totalRevenue, setTotalRevenue] = useState(0); // 💰 টোটাল ভলিউমের স্টেট
+    const [txCount, setTxCount] = useState(0); // 📊 মোট পেইড ট্রানজেকশনের স্টেট
     const [loading, setLoading] = useState(true);
 
-  const loadUsers = async () => {
-    try {
-        setLoading(true);
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
 
-        const tokenData = await authClient.token();
-         const token = tokenData?.token;
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
 
-        const res = await fetch(`http://localhost:5000/api/admin/all-user`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                authorization: `Bearer ${tokenData?.token}`
+            // 🔄 ৩টি API একসাথে প্যারালালি কল করা হচ্ছে (সুপার ফাস্ট পারফরম্যান্স)
+            const [usersRes, doctorsRes, appointmentsRes] = await Promise.all([
+                fetch(`http://localhost:5000/api/admin/all-user`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }
+                }),
+                fetch(`http://localhost:5000/api/admin/pending-doctors`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` }
+                }),
+                fetch(`http://localhost:5000/api/appointments`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+            ]);
+
+            const usersData = await usersRes.json();
+            const doctorsData = await doctorsRes.json();
+            const appointmentsData = await appointmentsRes.json();
+
+            // ১. ইউজার স্টেট সেট
+            if (Array.isArray(usersData)) {
+                setUsers(usersData);
             }
-        });
 
-        const data = await res.json();
-        if (Array.isArray(data)) {
-            setUsers(data);
+            // ২. ভেরিফাইড ডক্টর কাউন্ট সেট
+            if (Array.isArray(doctorsData)) {
+                const verifiedCount = doctorsData.filter(
+                    (doc) => doc.verificationStatus?.toLowerCase() === "verified"
+                ).length;
+                setVerifiedDoctorsCount(verifiedCount);
+            }
+
+            // ৩. পেমেন্ট ডাটা প্রসেস ও স্টেট সেট
+            if (Array.isArray(appointmentsData)) {
+                const revenue = appointmentsData.reduce((sum, app) => sum + (Number(app.consultationFee) || 0), 0);
+                setTotalRevenue(revenue);
+                setTxCount(appointmentsData.length);
+            }
+
+        } catch (err) {
+            console.error("Error fetching dashboard analytics data", err);
+        } finally {
+            setLoading(false);
         }
-    } catch (err) {
-        console.error("Error fetching users for dashboard", err);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
-useEffect(() => {
-    loadUsers();
-}, []);
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
 
     if (loading) return <div className="p-10 text-center font-bold text-[#021A54]">Loading Dashboard Metrics...</div>;
 
     const totalUsers = users.length;
     const totalPatients = users.filter(user => (user.role || "patient").toLowerCase() === "patient").length;
-    const totalDoctors = users.filter(user => user.role?.toLowerCase() === "doctor").length;
     const totalAdmins = users.filter(user => user.role?.toLowerCase() === "admin").length;
-    
     const activeUsers = users.filter(user => (user.status || "active") === "active").length;
-    const suspendedUsers = users.filter(user => user.status === "suspended").length;
 
+    // 🗂️ কার্ড ডেটা লিস্ট
     const cardsData = [
         {
             title: "Total Patients",
@@ -60,7 +90,7 @@ useEffect(() => {
         },
         {
             title: "Verified Doctors",
-            count: totalDoctors,
+            count: verifiedDoctorsCount,
             icon: <UserCheck size={22} />,
             bgColor: "#021A54", 
             textColor: "#ffffff",
@@ -75,13 +105,14 @@ useEffect(() => {
             description: "Currently active accounts on hub",
             border: "1px solid #e5e7eb"
         },
+        // 🎯 এখানে Suspended Accounts সরিয়ে পেমেন্ট ভলিউম কার্ড দেওয়া হলো
         {
-            title: "Suspended Accounts",
-            count: suspendedUsers,
-            icon: <ShieldAlert size={22} />,
-            bgColor: "#fee2e2", 
+            title: "Total Volume",
+            count: `৳ ${totalRevenue.toLocaleString()}`, // 👈 সুন্দর করে ফরম্যাট করা অ্যামাউন্ট
+            icon: <DollarSign size={22} />,
+            bgColor: "#fee2e2", // হালকা লালচে/গোলাপী ব্যাকগ্রাউন্ড ব্যাকআপ রাখা হলো
             textColor: "#ef4444",
-            description: "Temporarily restricted system profiles"
+            description: `${txCount} Total entries successfully checked out` // 👈 মোট ট্রানজেকশন কাউন্ট ডেসক্রিপশনে দিয়ে দেওয়া হলো
         }
     ];
 
@@ -103,7 +134,6 @@ useEffect(() => {
             <div className="py-6 px-4 md:px-8" style={{ backgroundColor: '#FFFFFF' }}>
                 <div className="max-w-6xl mx-auto">
                     {/* Header */}
-                    {/* 🛠️ mb-8 থেকে কমিয়ে mb-6 করা হয়েছে */}
                     <div className="mb-6 border-b border-gray-200 pb-4 flex justify-between items-center">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-extrabold text-[#021A54]">Ecosystem Analytics</h1>
@@ -115,7 +145,6 @@ useEffect(() => {
                     </div>
 
                     {/* 🗂️ গ্রিড লেআউটে ওভারভিউ কার্ডস */}
-                    {/* 🛠️ mb-10 থেকে কমিয়ে mb-6 করা হয়েছে */}
                     <motion.div 
                         variants={containerVariants}
                         initial="hidden"
@@ -134,7 +163,6 @@ useEffect(() => {
                                     border: card.border 
                                 }}
                             >
-                                {/* ব্যাকগ্রাউন্ড সার্কেল ইফেক্ট */}
                                 <div 
                                     className="absolute -right-8 -bottom-8 w-24 h-24 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500"
                                     style={{ backgroundColor: '#FF85BB' }}
@@ -147,7 +175,8 @@ useEffect(() => {
                                             {card.icon}
                                         </div>
                                     </div>
-                                    <h2 className="text-3xl md:text-4xl font-black mb-1">
+                                    {/* 💡 এখানে টেক্সটের সাইজ একটু ব্যালেন্স করা হয়েছে যাতে বড় টাকার ফিগার সুন্দরভাবে ধরে যায় */}
+                                    <h2 className="text-2xl md:text-3xl font-black mb-1 tracking-tight">
                                         {card.count}
                                     </h2>
                                 </div>
@@ -168,11 +197,8 @@ useEffect(() => {
                         <motion.button 
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => loadUsers()}
-                            className="text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm active:scale-95 cursor-pointer flex items-center gap-2"
-                            style={{ backgroundColor: '#021A54' }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#FF85BB'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#021A54'}
+                            onClick={() => loadDashboardData()}
+                            className="text-white text-xs font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm active:scale-95 cursor-pointer flex items-center gap-2 bg-[#021A54] hover:bg-[#FF85BB]"
                         >
                             <RefreshCw size={14} className="animate-spin-slow" />
                             Refresh Live Metrics
@@ -181,7 +207,8 @@ useEffect(() => {
 
                 </div>
             </div>
-            {/* 🛠️ চাইল্ড কম্পোনেন্টের নিজের যদি কোনো অভ্যন্তরীণ টপ মার্জিন থাকে, তবে তা এই ডিভের নিচে সুন্দরভাবে প্লেস হবে */}
+
+            {/* 📊 চার্ট কম্পোনেন্ট */}
             <div className="px-4 md:px-8 pb-10">
                 <div className="max-w-6xl mx-auto">
                     <DoctorRecharts />

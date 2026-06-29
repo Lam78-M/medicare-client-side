@@ -4,33 +4,38 @@ import React, { useEffect, useState } from 'react';
 import { Spinner, Chip } from "@heroui/react"; 
 import { toast, ToastContainer } from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.css';
+// 🎯 এই ইমপোর্ট লাইনটি মিসিং ছিল, এটা যোগ করা হয়েছে:
+import { authClient } from "@/lib/auth-client"; 
 
 export default function AdminAppointmentDashboard() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // ডাটাবেজের সব ডাটা একসাথে নিয়ে আসার ফাংশন
-  const fetchAllAppointments = async () => {
-    setLoading(true);
-    const tokenData = await authClient.token();
+    // ডাটাবেজের সব ডাটা একসাথে নিয়ে আসার ফাংশন
+    const fetchAllAppointments = async () => {
+        setLoading(true);
+        try {
+            // 🔒 authClient থেকে টোকেন নেওয়া হচ্ছে
+            const tokenData = await authClient.token();
+            const token = tokenData?.token;
 
-    fetch(`http://localhost:5000/api/appointments`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-             authorization: `Bearer ${tokenData?.token}` 
+            const res = await fetch(`http://localhost:5000/api/appointments`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    authorization: `Bearer ${token}` 
+                }
+            });
+            const data = await res.json();
+            
+            setAppointments(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Error fetching all appointments:", err);
+            toast.error("Failed to fetch system records! ❌");
+        } finally {
+            setLoading(false);
         }
-    })
-    .then((res) => res.json())
-    .then((data) => {
-        setAppointments(Array.isArray(data) ? data : []);
-        setLoading(false);
-    })
-    .catch((err) => {
-        console.error("Error:", err);
-        setLoading(false);
-    });
-};
+    };
 
     useEffect(() => {
         fetchAllAppointments();
@@ -59,10 +64,9 @@ export default function AdminAppointmentDashboard() {
                 </Chip>
             </div>
 
-            {/* 🔄 📱 ছোট স্ক্রিনের জন্য স্লাইড/স্ক্রোল করার অপশন (Responsive Container) */}
+            {/* 🔄 📱 Responsive Container */}
             <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200">
                 <table className="w-full border-collapse text-left min-w-[800px]"> 
-                    {/* min-w-[800px] দেওয়ার কারণে ছোট স্ক্রিনে টেবিলটা চ্যাপ্টা হবে না, ইউজার সুন্দর স্লাইড করতে পারবে */}
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-100">
                             <th className="p-4 text-[#021A54] font-black text-xs uppercase tracking-wider rounded-l-2xl whitespace-nowrap">PATIENT NAME & EMAIL</th>
@@ -123,7 +127,7 @@ export default function AdminAppointmentDashboard() {
                                             ৳{appointment.consultationFee}
                                         </td>
                                         
-                                        {/* ۷. স্ট্যাটাস চিপ */}
+                                        {/* ৭. স্ট্যাটাস চিপ */}
                                         <td className="p-4 text-center whitespace-nowrap">
                                             <Chip size="sm" variant="flat" className={`font-black text-[10px] shadow-sm mx-auto ${
                                                 appointment.status === 'Approved' 
