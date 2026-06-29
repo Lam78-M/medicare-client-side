@@ -35,8 +35,10 @@ export default function DashboardPrescrip() {
     }
 };
 useEffect(() => {  
-    fetchPrescriptions();
-}, []);
+    if (session?.user) {
+        fetchPrescriptions();
+    }
+}, [session]);
 
     const currentDoctorEmail = doctorEmail?.trim().toLowerCase();
     
@@ -81,7 +83,7 @@ useEffect(() => {
                                 key={pres._id} 
                                 className="bg-[#FFFFFF] p-6 rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden border border-white/10"
                             >
-                                {/* বর্ডার টপ ডেকোরেশন লাইন - Using #021A54 */}
+                             
                                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#021A54]"></div>
                                 
                                 <div className="flex justify-between items-start mb-4">

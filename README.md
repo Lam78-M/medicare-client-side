@@ -3,12 +3,13 @@
 MediCare Connect is a modern, full-stack healthcare ecosystem designed to bridge the gap between patients, doctors, and hospital administrators. By digitizing appointment bookings, securing medical records, and incorporating a seamless payment infrastructure, the platform eliminates long waiting times and streamlines clinical workflows.
 
 ## 🚀 Live Links & Credentials
-*   **Live Deployment:** [Insert Live Site Link Here]
-*   **Client-Side Repository:** [Insert GitHub Client Link Here]
-*   **Server-Side Repository:** [Insert GitHub Server Link Here]
+*   **Live Deployment:** https://medicare-client-sigma.vercel.app
+*   **Client-Side Repository:** https://github.com/Lam78-M/medicare-server-side
+*   **Server-Side Repository:** https://github.com/Lam78-M/medicare-client-side
 
 ### 🔑 Demo Admin Credentials
-*   **Email:** `admin@medicare.com` *(Or your specific admin email)*
+*   **Email:** 1. niaz.chowdhury@medicare.com
+               2. kamrul.rony@medicare.com
 *   **Password:** `123Door26#` *(Or your specific admin password)*
 
 ---
@@ -82,14 +83,3 @@ MediCare Connect is a modern, full-stack healthcare ecosystem designed to bridge
 
 Create an `.env.local` file in your **client** directory and an `.env` file in your **server** directory.
 
-### Client Environment Variables
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
-
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-NEXT_PUBLIC_API_URL=http://localhost:5000
