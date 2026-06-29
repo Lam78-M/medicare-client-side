@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Mail, Lock, ArrowRight, Stethoscope } from "lucide-react"; 
@@ -10,7 +9,6 @@ import { authClient } from "@/lib/auth-client";
 import { FaGoogle } from "react-icons/fa";
 
 export default function SignInPage() {
-  const router = useRouter(); 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -67,15 +65,15 @@ export default function SignInPage() {
       const loggedInRole = data?.user?.role || "patient"; 
       localStorage.setItem("user_role", loggedInRole);
 
+      // 🎯 এখানে window.location.href ব্যবহার করা হয়েছে নিখুঁত হার্ড রিলোড নিশ্চিত করতে
       setTimeout(() => {
         if (loggedInRole === "admin") {
-          router.push("/dashboard/admin");
+          window.location.href = "/dashboard/admin";
         } else if (loggedInRole === "doctors") {
-          router.push("/dashboard/doctors");
+          window.location.href = "/dashboard/doctors";
         } else {
-          router.push("/dashboard/patient");
+          window.location.href = "/dashboard/patient";
         }
-        router.refresh();
       }, 1500);
 
     } catch (err) {
@@ -85,12 +83,16 @@ export default function SignInPage() {
     }
   };
 
-  const handleGoogleSignIn = async () =>{
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/"
-    })
-  }
+  const handleGoogleSignIn = async () => {
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/"
+      });
+    } catch (err) {
+      showToast("Google sign in failed. Try again!", "error");
+    }
+  };
 
   return (
     <main className="min-h-screen bg-white flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
@@ -113,7 +115,7 @@ export default function SignInPage() {
           </p>
         </div>
 
-        {/* 🩺 🎯 ডাক্তারদের ডেমো লগইন ক্রেডেনশিয়াল বক্স */}
+        {/* 🩺 🎯 ডেমো অ্যাকাউন্ট বক্স */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -126,16 +128,16 @@ export default function SignInPage() {
           <div className="space-y-1 w-full">
             <h4 className="text-xs font-bold text-[#021A54] uppercase tracking-wide">Doctor Demo Account info</h4>
             <div className="text-xs font-medium text-slate-600 space-y-1 bg-white/50 p-2 rounded-xl border border-slate-100 mt-1">
-              <div className="text-sm"><span className="font-bold text-[#021A54] ">Email:</span > 1. niaz.chowdhury@medicare.com  <br></br>
-                                                             2. kamrul.rony@medicare.com
+              <div className="text-sm">
+                <span className="font-bold text-[#021A54]">Email:</span> 1. niaz.chowdhury@medicare.com <br />
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. kamrul.rony@medicare.com
               </div> 
-              <div><span className="font-bold text-[#021A54] text-sm">Password:</span>123Door26#</div>
+              <div><span className="font-bold text-[#021A54] text-sm">Password:</span> 123Door26#</div>
             </div>
           </div>
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-       
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-[#021A54]/80 px-1">Email Address</label>
             <div className="relative">   
