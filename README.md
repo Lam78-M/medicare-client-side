@@ -1,3 +1,7 @@
+<p>
+  <img src="Screenshot 2026-07-09 191328.png" />
+</p>
+
 # 🩺 MediCare Connect – Hospital Appointment & Healthcare Management System
 
 MediCare Connect is a modern, full-stack healthcare ecosystem designed to bridge the gap between patients, doctors, and hospital administrators. By digitizing appointment bookings, securing medical records, and incorporating a seamless payment infrastructure, the platform eliminates long waiting times and streamlines clinical workflows.
