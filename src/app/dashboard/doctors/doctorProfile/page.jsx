@@ -126,7 +126,7 @@ const UpdateProfilePage = () => {
                 <div className="text-center border-b border-gray-100 pb-4">
                     <h2 className="text-2xl font-extrabold text-[#021A54]">🩺 Update Profile Information</h2>
                     <p className="text-sm font-bold text-pink-500 mt-1">Welcome, {doctorName}</p>
-                    <p className="text-[10px] text-gray-400 font-mono mt-1">Logged Email: {doctorEmail}</p>
+                   
                 </div>
 
                 <form onSubmit={handleProfileUpdate} className="space-y-5">

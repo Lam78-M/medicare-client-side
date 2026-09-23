@@ -140,7 +140,7 @@ const UpdateSchedulePage = () => {
                 <div className="text-center border-b border-gray-100 pb-4">
                     <h2 className="text-2xl font-extrabold text-[#021A54]">📅 Update Your Schedule</h2>
                     <p className="text-sm font-bold text-pink-500 mt-1">Welcome, {doctorName}</p>
-                    <p className="text-[10px] text-gray-400 font-mono mt-1">Logged Email: {doctorEmail}</p>
+
                 </div>
 
                 <form onSubmit={handleUpdateSubmit} className="space-y-6">

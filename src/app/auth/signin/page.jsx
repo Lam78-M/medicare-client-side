@@ -41,7 +41,7 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
 
-    const { email, password } = formData;
+    const { email, password } = formData;  
 
     if (!email || !password) {
       showToast("Please enter both email and password!", "error");
@@ -65,7 +65,7 @@ export default function SignInPage() {
       const loggedInRole = data?.user?.role || "patient"; 
       localStorage.setItem("user_role", loggedInRole);
 
-      // 🎯 এখানে window.location.href ব্যবহার করা হয়েছে নিখুঁত হার্ড রিলোড নিশ্চিত করতে
+    
       setTimeout(() => {
         if (loggedInRole === "admin") {
           window.location.href = "/dashboard/admin";

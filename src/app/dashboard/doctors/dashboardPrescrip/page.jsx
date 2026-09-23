@@ -88,7 +88,7 @@ useEffect(() => {
                                     <div>
                                         <h3 className="font-black text-xl text-[#021A54]">{pres.patientName}</h3>
                                         <p className="text-[11px] font-bold text-gray-400 uppercase mt-0.5">
-                                            ID: {pres.appointmentId} | Issued: {pres.date || "Recent"}
+                                        Issued: {pres.date || "Recent"}
                                         </p>
                                     </div>
                                     <Link 

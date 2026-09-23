@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HomePage from "./homepage/page";
 import { ToastContainer } from "react-toastify";
+import { AIChatWindow } from "@/components/AIChatWindow";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Navbar></Navbar>
+        <AIChatWindow />
         {children}
         <Footer></Footer>
         <ToastContainer position="top-right" autoClose={3000}></ToastContainer>

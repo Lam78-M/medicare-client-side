@@ -101,7 +101,7 @@ export default function PrescriptionHistoryPage() {
                 ) : myFilteredPrescriptions.length === 0 ? (
                  
                     <div className="bg-white p-16 text-center text-gray-400 font-bold rounded-3xl border border-dashed border-gray-200 shadow-sm">
-                        No prescriptions issued by you found in MongoDB. 📋
+                        No prescriptions issued by you found in Here 📋
                     </div>
                 ) : (  
             
@@ -118,7 +118,7 @@ export default function PrescriptionHistoryPage() {
                                     <div>
                                         <h3 className="font-black text-xl text-[#021A54]">{pres.patientName}</h3>
                                         <p className="text-[11px] font-bold text-gray-400 uppercase mt-0.5">
-                                            ID: {pres.appointmentId} | Issued: {pres.date}
+                                              Issued: {pres.date}
                                         </p>
                                     </div>
                                     <span className="bg-green-50 text-green-700 text-[10px] font-black px-2.5 py-1 rounded-full border border-green-100">

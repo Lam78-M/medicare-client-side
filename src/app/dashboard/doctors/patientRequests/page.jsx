@@ -216,9 +216,7 @@ useEffect(() => {
                                                 <h3 className="font-extrabold text-lg text-[#021A54]">
                                                     {appointment.patientName || appointment.userName || "Unknown Patient"}
                                                 </h3>
-                                                <p className="text-xs text-gray-400">
-                                                    📧 {appointment.patientEmail || appointment.userEmail || "No Email Provided"}
-                                                </p>
+                                               
                                             </div>
                                         </div>
 

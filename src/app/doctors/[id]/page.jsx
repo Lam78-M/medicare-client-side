@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, Button, Chip, Spinner, Avatar, Input } from "@heroui/react";
 import { authClient } from "@/lib/auth-client"; 
 import { toast } from 'react-toastify'; 
+import Image from 'next/image';
 
 const DoctorDetailPage = () => {
     const { id } = useParams();
@@ -89,12 +90,14 @@ const DoctorDetailPage = () => {
                     <Card className="bg-white p-6 rounded-3xl border border-[#2652b8]/20 shadow-[0_10px_25px_rgba(2,26,84,0.15)] flex flex-col items-center text-center relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 rounded-full -mr-10 -mt-10 opacity-20" style={{ backgroundColor: '#FFCEE3' }}></div>
                         
-                        <Avatar 
-                            src={doctor.profileImage || "https://via.placeholder.com/150"} 
-                            className="w-36 h-36 text-large border-4 shadow-md mb-4"
-                            style={{ borderColor: '#FFCEE3' }}
-                        />
-
+                       <Image 
+  src={doctor.profileImage || "https://via.placeholder.com/150"} 
+  alt={doctor.name || "Doctor Profile"}
+  width={144}  
+  height={144} 
+  className="rounded-full border-4 shadow-md mb-4 object-cover" 
+  style={{ borderColor: '#FFCEE3' }}
+/>
                         <div className="flex items-center gap-1.5 justify-center mb-1">
                             <h2 className="font-extrabold text-2xl" style={{ color: '#021A54' }}>{doctor.doctorName}</h2>
                             {doctor.verificationStatus === "Verified" && (
